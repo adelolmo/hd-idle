@@ -6,9 +6,14 @@
   packages = ["."]
   revision = "f710aebf64c1cdd232326293a187011f6df77707"
 
+[[projects]]
+  name = "github.com/jasonlvhit/gocron"
+  packages = ["."]
+  revision = "54194c9749d48b073c9aeb2c787b6882e95dd0cd"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "4c5a152fe8fd0b3b5c000784b5d371409c89c3183bee18d35cd186f4db786bc1"
+  inputs-digest = "a4adea83637431bed685da8425f03969fbe6484c8785d9c4c1b13ffa98c50042"
   solver-name = "gps-cdcl"
   solver-version = 1

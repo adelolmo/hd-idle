@@ -24,3 +24,7 @@
 [[constraint]]
   name = "github.com/benmcclelland/sgio"
   revision = "f710aebf64c1cdd232326293a187011f6df77707"
+
+[[constraint]]
+  name = "github.com/jasonlvhit/gocron"
+  revision = "54194c9749d48b073c9aeb2c787b6882e95dd0cd"
