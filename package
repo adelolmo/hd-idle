@@ -1,0 +1,29 @@
+#!/bin/sh
+
+set -e
+
+BUILD=build
+version=$(cat VERSION)
+rm -Rf $BUILD
+mkdir -p $BUILD/release $BUILD/tmp
+
+echo "Building version $version..."
+
+ar="amd64 arm"
+for arch in ${ar}; do
+    echo $arch
+
+    rm -rf $BUILD/tmp/*
+    cp -R deb/* $BUILD/tmp
+
+    GOOS=linux GOARCH=$arch GOARM=7 go build -o $BUILD/tmp/usr/bin/hd-idle main.go
+
+    architecture=$( echo $arch | sed 's/arm/armhf/g' )
+    size=$(du -cs $BUILD/tmp | sed '1!d' | grep -oe "^[0-9]*")
+    sed -i 's/{{version}}/'${version}'/g;s/{{size}}/'${size}'/g;s/{{architecture}}/'${architecture}'/g' $BUILD/tmp/DEBIAN/control
+
+    chmod 0555 $BUILD/tmp/DEBIAN/p*
+    fakeroot dpkg-deb -b -z9 $BUILD/tmp $BUILD/release
+done
+
+echo done

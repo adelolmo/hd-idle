@@ -1,0 +1,10 @@
+[Unit]
+Description=Hard drive idling daemon
+
+[Service]
+Type=simple
+EnvironmentFile=/etc/hd-idle/hd-idle.conf
+ExecStart=/usr/bin/hd-idle $HD_IDLE_OPTS
+
+[Install]
+WantedBy=multi-user.target
