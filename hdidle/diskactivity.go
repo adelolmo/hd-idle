@@ -88,6 +88,7 @@ func updateState(tmp diskstats.DiskStats, config *Config) {
 			ds.SpinDownAt.Format(DATE_FORMAT), ds.SpinUpAt.Format(DATE_FORMAT), ds.LastIoAt.Format(DATE_FORMAT))
 	}
 }
+
 func previousDiskStatsIndex(diskName string) int {
 	for i, stats := range previousSnapshots {
 		if stats.Name == diskName {

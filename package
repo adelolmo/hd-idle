@@ -16,7 +16,7 @@ for arch in ${ar}; do
     rm -rf $BUILD/tmp/*
     cp -R deb/* $BUILD/tmp
 
-    GOOS=linux GOARCH=$arch GOARM=7 go build -o $BUILD/tmp/usr/bin/hd-idle main.go
+    GOOS=linux GOARCH=$arch GOARM=7 go build -o $BUILD/tmp/usr/sbin/hd-idle main.go
 
     architecture=$( echo $arch | sed 's/arm/armhf/g' )
     size=$(du -cs $BUILD/tmp | sed '1!d' | grep -oe "^[0-9]*")

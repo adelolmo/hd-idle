@@ -23,9 +23,8 @@ START_HD_IDLE=false
 #                          this option should not cause any additional spinups.
 #
 # Options not exactly useful here:
-#  -t <disk>               Spin-down the specfified disk immediately and exit.
-#  -d                      Debug mode. This will prevent hd-idle from
-#                          becoming a daemon and print debugging info to
-#                          stdout/stderr
+#  -t <disk>               Spin-down the specified disk immediately and exit.
+#  -d                      Debug mode. It will print debugging info to
+#                          stdout/stderr (/var/log/syslog if started as with systemctl)
 #  -h                      Print usage information.
-HD_IDLE_OPTS="-i 600 -c scsi -a sdb -c ata -a sdc -c ata -l /var/log/hd-idle.log -d"
+#HD_IDLE_OPTS="-i 180 -l /var/log/hd-idle.log"

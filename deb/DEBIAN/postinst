@@ -3,6 +3,5 @@
 case "$1" in
     configure|reconfigure)
         systemctl daemon-reload
-        systemctl enable hd-idle
     ;;
 esac

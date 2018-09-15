@@ -63,8 +63,7 @@ func main() {
 		case "-c":
 			command := os.Args[index+2]
 			switch command {
-			case hdidle.SCSI:
-			case hdidle.ATA:
+			case hdidle.SCSI, hdidle.ATA:
 				if deviceConf == nil {
 					config.Defaults.CommandType = command
 					break
