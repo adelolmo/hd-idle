@@ -2,6 +2,9 @@
 
 case "$1" in
     configure|reconfigure)
+        ucf /usr/share/hd-idle/configuration /etc/default/hd-idle
+        ucfr hd-idle /etc/default/hd-idle
+
         systemctl daemon-reload
     ;;
 esac
