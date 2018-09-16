@@ -25,6 +25,8 @@ for arch in ${ar}; do
     mv hd-idle ${BUILD}/tmp/usr/sbin/
     cd ${ROOT}
 
+    gzip ${BUILD}/tmp/usr/share/man/man1/hd-idle.1
+
     size=$(du -cs ${BUILD}/tmp | sed '1!d' | grep -oe "^[0-9]*")
     sed -i 's/{{version}}/'${version}'/g;s/{{size}}/'${size}'/g;s/{{architecture}}/'${arch}'/g' ${BUILD}/tmp/DEBIAN/control
 

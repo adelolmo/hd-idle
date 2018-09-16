@@ -1,0 +1,115 @@
+.\"                                      Hey, EMACS: -*- nroff -*-
+.\" First parameter, NAME, should be all caps
+.\" Second parameter, SECTION, should be 1-8, maybe w/ subsection
+.\" other parameters are allowed: see man(7), man(1)
+.TH HD-IDLE 1 "September 16, 2018"
+.\" Please adjust this date whenever revising the manpage.
+.\"
+.\" Some roff macros, for reference:
+.\" .nh        disable hyphenation
+.\" .hy        enable hyphenation
+.\" .ad l      left justify
+.\" .ad b      justify to both left and right margins
+.\" .nf        disable filling
+.\" .fi        enable filling
+.\" .br        insert line break
+.\" .sp <n>    insert n+1 empty lines
+.\" for manpage-specific macros, see man(7)
+.SH NAME
+hd-idle \- spin down idle hard disks
+.SH SYNOPSIS
+.B hd-idle
+.RI [ options ]
+.P
+.SH DESCRIPTION
+hd-idle is a utility program for spinning down external disks after a period
+of idle time. Since most external IDE disk enclosures don't support setting
+the IDE idle timer, a program like hd-idle is required to spin down idle
+disks automatically.
+.P
+A word of caution: hard disks don't like spinning up too often. Laptop disks
+are more robust in this respect than desktop disks but if you set your disks
+to spin down after a few seconds you may damage the disk over time due to the
+stress the spin-up causes on the spindle motor and bearings. It seems that
+manufacturers recommend a minimum idle time of 3-5 minutes, the default in
+hd-idle is 10 minutes.
+.P
+One more word of caution: hd-idle will spin down any disk accessible via the
+SCSI layer (USB, IEEE1394, ...) but it will NOT work with real SCSI disks
+because they won't spin up automatically. Thus it's not called scsi-idle and
+I don't recommend using it on a real SCSI system unless you have a kernel
+patch that automatically starts the SCSI disks after receiving a sense buffer
+indicating the disk has been stopped. Without such a patch, real SCSI disks
+won't start again and you can as well pull the plug.
+.SH OPTIONS
+.TP
+.B \-a name
+Set device name of disks for subsequent idle-time parameters
+.B (-i).
+This parameter is optional in the sense that there's a default entry for
+all disks which are not named otherwise by using this parameter. This can
+also be a symlink (e.g. /dev/disk/by-uuid/...)
+.TP
+.B \-i idle_time
+Idle time in seconds for the currently named disk(s) (-a <name>) or for
+all disks.
+.B \-c command_type
+Api call to stop the device. Possible values are "scsi" (default value)
+and "ata".
+.TP
+.B \-l logfile
+Name of logfile (written only after a disk has spun up). Please note that
+this option might cause the disk which holds the logfile to spin up just
+because another disk had some activity. This option should not be used on
+systems with more than one disk except for tuning purposes. On single-disk
+systems, this option should not cause any additional spinups.  
+.TP
+.B \-t disk
+Spin-down the specified disk immediately and exit.
+.TP
+.B \-d
+Debug mode. It will print debugging info to stdout/stderr (/var/log/syslog
+if started as with systemctl)
+.TP
+.B \-h
+Print usage information.
+.SH "DISK SELECTION"
+The parameter
+.B \-a
+can be used to set a filter on the disk's device name (omit /dev/) for
+subsequent idle-time settings. The default is all disks:
+.P
+.TP
+.B \1)
+A
+.B \-i
+option before the first
+.B \-a
+option will set the default idle time.
+.TP
+.B \2)
+In order to disable spin-down of disks per default, and then re-enable
+spin-down on selected disks, set the default idle time to 0.
+.SH EXAMPLE
+hd-idle -i 0 -a sda -i 300 -a sdb -i 1200
+.P
+This example sets the default idle time to 0 (meaning hd-idle will never
+try to spin down a disk) and default "scsi" api command, then sets explicit
+idle times for disks which have the string "sda" or "sdb" in their device name.
+.B \3)
+The option -c allows to set the api call that sends the spindown command.
+Possible values are "scsi" (the default value) or "ata".
+.SH EXAMPLE
+hd-idle -i 0 -c ata -a sda -i 300 -a sdb -i 1200 -c scsi
+.P
+This example sets the default idle time to 0 (meaning hd-idle will never
+try to spin down a disk) and default "ata" api command, then sets explicit
+idle times for disks which have the string "sda" or "sdb" in their device name
+and sets "sdb" to use "ata" api command.
+.SH AUTHOR
+hd-idle was written by Chistian Mueller <chris@mumac.de>
+The port to Go was written by Andoni del Olmo <andoni.delolmo@gmail>
+.PP
+This manual page was written by Christian Mueller <chris@mumac.de>,
+for the Debian project (and may be used by others).
+Modified by Andoni del Olmo <andoni.delolmo@gmail.com>
