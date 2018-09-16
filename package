@@ -2,28 +2,34 @@
 
 set -e
 
-BUILD=build
+ROOT=$(pwd)
+BUILD="$ROOT/build"
 version=$(cat VERSION)
-rm -Rf $BUILD
-mkdir -p $BUILD/release $BUILD/tmp
+rm -Rf ${BUILD}
+mkdir -p ${BUILD}/release ${BUILD}/tmp
 
 echo "Building version $version..."
 
-ar="amd64 arm"
+ar="amd64 armhf"
 for arch in ${ar}; do
-    echo $arch
+    echo ${arch}
 
-    rm -rf $BUILD/tmp/*
-    cp -R deb/* $BUILD/tmp
+    rm -rf ${BUILD}/tmp/*
+    mkdir -p ${BUILD}/tmp/usr/sbin
+    cp -R deb/* ${BUILD}/tmp
 
-    GOOS=linux GOARCH=$arch GOARM=7 go build -o $BUILD/tmp/usr/sbin/hd-idle main.go
+    GOOS=linux GOARCH=$( echo ${arch} | sed 's/armhf/arm/g' ) go build -o ${BUILD}/hd-idle
+    cd ${BUILD}
+    tar zcf hd-idle-${version}.linux-${arch}.tar.gz hd-idle
+    mv hd-idle-${version}.linux-${arch}.tar.gz ${BUILD}/release
+    mv hd-idle ${BUILD}/tmp/usr/sbin/
+    cd ${ROOT}
 
-    architecture=$( echo $arch | sed 's/arm/armhf/g' )
-    size=$(du -cs $BUILD/tmp | sed '1!d' | grep -oe "^[0-9]*")
-    sed -i 's/{{version}}/'${version}'/g;s/{{size}}/'${size}'/g;s/{{architecture}}/'${architecture}'/g' $BUILD/tmp/DEBIAN/control
+    size=$(du -cs ${BUILD}/tmp | sed '1!d' | grep -oe "^[0-9]*")
+    sed -i 's/{{version}}/'${version}'/g;s/{{size}}/'${size}'/g;s/{{architecture}}/'${arch}'/g' ${BUILD}/tmp/DEBIAN/control
 
-    chmod 0555 $BUILD/tmp/DEBIAN/p*
-    fakeroot dpkg-deb -b -z9 $BUILD/tmp $BUILD/release
+    chmod 0555 ${BUILD}/tmp/DEBIAN/p*
+    fakeroot dpkg-deb -b -z9 ${BUILD}/tmp ${BUILD}/release
 done
 
 echo done
