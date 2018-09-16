@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/adelolmo/hd-idle/hdidle"
+	"github.com/adelolmo/hd-idle/sgio"
 	"github.com/jasonlvhit/gocron"
 	"os"
 	"strconv"
@@ -33,6 +34,15 @@ func main() {
 
 	for index, arg := range os.Args[1:] {
 		switch arg {
+		case "-t":
+			if len(os.Args) < 3 {
+				println("Missing disk argument. Must be a device (e.g. sda)")
+				os.Exit(1)
+			}
+			device := os.Args[index+2]
+			sgio.StopScsiDevice(device)
+			os.Exit(0)
+
 		case "-a":
 			if deviceConf != nil {
 				config.Devices = append(config.Devices, *deviceConf)
@@ -44,7 +54,6 @@ func main() {
 				Idle:        config.Defaults.Idle,
 				CommandType: config.Defaults.CommandType,
 			}
-			break
 
 		case "-i":
 			s := os.Args[index+2]
@@ -58,7 +67,6 @@ func main() {
 				break
 			}
 			deviceConf.Idle = idle
-			break
 
 		case "-c":
 			command := os.Args[index+2]
@@ -69,20 +77,16 @@ func main() {
 					break
 				}
 				deviceConf.CommandType = command
-				break
 			default:
 				println(errors.New(fmt.Sprintf("Wrong command_type -c %s. Must be one of: scsi, ata", command)))
 				os.Exit(1)
 			}
-			break
 
 		case "-l":
 			config.Defaults.LogFile = os.Args[index+2]
-			break
 
 		case "-d":
 			config.Defaults.Debug = true
-			break
 
 		case "h":
 			println("usage: hd-idle [-t <disk>] [-a <name>] [-i <idle_time>] [-c <command_type>] [-l <logfile>] [-d] [-h]\n")
