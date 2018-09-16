@@ -148,7 +148,7 @@ Regarding the parameter "-a":
     This example sets the default idle time to 0 (meaning hd-idle will never
     try to spin down a disk) and default "ata" api command, then sets explicit 
     idle times for disks which have the string "sda" or "sdb" in their device name 
-    and sets "sdb" to use "ata" api command.
+    and sets "sdb" to use "scsi" api command.
 
 ## License
 
