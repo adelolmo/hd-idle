@@ -8,6 +8,7 @@ rm -Rf ${BUILD}
 mkdir -p ${BUILD}/release ${BUILD}/tmp ${BUILD}/bin
 
 echo "Building version $version..."
+[ -d vendor ] || dep ensure
 
 ar="amd64 armhf"
 for arch in ${ar}; do

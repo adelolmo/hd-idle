@@ -2,18 +2,25 @@
 
 
 [[projects]]
+  digest = "1:490dcac9e05817a48df4df6903c0531ca8c6002a330fccf51fe10300452fcefd"
   name = "github.com/benmcclelland/sgio"
   packages = ["."]
+  pruneopts = ""
   revision = "f710aebf64c1cdd232326293a187011f6df77707"
 
 [[projects]]
+  digest = "1:33b76de987ff2353a0bef8f81b15b3ae462f7c47a0fd0e90798de1100ce34aad"
   name = "github.com/jasonlvhit/gocron"
   packages = ["."]
+  pruneopts = ""
   revision = "54194c9749d48b073c9aeb2c787b6882e95dd0cd"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "a4adea83637431bed685da8425f03969fbe6484c8785d9c4c1b13ffa98c50042"
+  input-imports = [
+    "github.com/benmcclelland/sgio",
+    "github.com/jasonlvhit/gocron",
+  ]
   solver-name = "gps-cdcl"
   solver-version = 1
