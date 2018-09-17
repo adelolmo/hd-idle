@@ -2,11 +2,10 @@
 
 set -e
 
-ROOT=$(pwd)
-BUILD="$ROOT/build"
+BUILD="build"
 version=$(cat VERSION)
 rm -Rf ${BUILD}
-mkdir -p ${BUILD}/release ${BUILD}/tmp
+mkdir -p ${BUILD}/release ${BUILD}/tmp ${BUILD}/bin
 
 echo "Building version $version..."
 
@@ -18,12 +17,10 @@ for arch in ${ar}; do
     mkdir -p ${BUILD}/tmp/usr/sbin
     cp -R deb/* ${BUILD}/tmp
 
-    GOOS=linux GOARCH=$( echo ${arch} | sed 's/armhf/arm/g' ) go build -o ${BUILD}/hd-idle
-    cd ${BUILD}
-    tar zcf hd-idle-${version}.linux-${arch}.tar.gz hd-idle
-    mv hd-idle-${version}.linux-${arch}.tar.gz ${BUILD}/release
-    mv hd-idle ${BUILD}/tmp/usr/sbin/
-    cd ${ROOT}
+    GOOS=linux GOARCH=$( echo ${arch} | sed 's/armhf/arm/g' ) go build -o ${BUILD}/bin/hd-idle
+    tar -C ${BUILD}/bin -zcf ${BUILD}/hd-idle-${version}.linux-${arch}.tar.gz .
+    mv ${BUILD}/hd-idle-${version}.linux-${arch}.tar.gz ${BUILD}/release
+    mv ${BUILD}/bin/hd-idle ${BUILD}/tmp/usr/sbin/
 
     gzip ${BUILD}/tmp/usr/share/man/man1/hd-idle.1
 
