@@ -4,6 +4,7 @@ Section: utils
 Priority: extra
 Architecture: {{architecture}}
 Maintainer: Andoni del Olmo <andoni.delolmo@gmail.com>
+Homepage: https://github.com/adelolmo/hd-idle
 Installed-Size: {{size}}
 Description: Spin down idle [USB] hard disks
  hd-idle is a utility program for spinning-down external disks after a period
