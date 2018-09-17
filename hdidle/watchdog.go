@@ -77,9 +77,9 @@ func updateState(tmp diskstats.DiskStats, config *Config) {
 		previousSnapshots[dsi].SpunDown = false
 	}
 
-	ds = previousSnapshots[dsi]
-	idleDuration := int(time.Now().Sub(ds.LastIoAt).Seconds())
 	if config.Defaults.Debug {
+		ds = previousSnapshots[dsi]
+		idleDuration := int(time.Now().Sub(ds.LastIoAt).Seconds())
 		fmt.Printf("disk=%s command=%s spunDown=%t "+
 			"reads=%d writes=%d idleTime=%d idleDuration=%d "+
 			"spindown=%s spinup=%s lastIO=%s\n",
@@ -101,7 +101,7 @@ func previousDiskStatsIndex(diskName string) int {
 func initDevice(stats diskstats.DiskStats, config *Config) diskstats.DiskStats {
 	idle := config.Defaults.Idle
 	command := config.Defaults.CommandType
-	deviceConf := deviceConfig(config, stats.Name)
+	deviceConf := deviceConfig(stats.Name, config)
 	if deviceConf != nil {
 		idle = deviceConf.Idle
 		command = deviceConf.CommandType
@@ -119,7 +119,7 @@ func initDevice(stats diskstats.DiskStats, config *Config) diskstats.DiskStats {
 	}
 }
 
-func deviceConfig(config *Config, diskName string) *DeviceConf {
+func deviceConfig(diskName string, config *Config) *DeviceConf {
 	for _, device := range config.Devices {
 		if device.Name == diskName {
 			return &device

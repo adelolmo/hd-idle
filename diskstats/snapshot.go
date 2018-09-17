@@ -2,6 +2,7 @@ package diskstats
 
 import (
 	"bufio"
+	"errors"
 	"log"
 	"os"
 	"regexp"
@@ -22,6 +23,12 @@ type DiskStats struct {
 	SpunDown    bool
 }
 
+var scsiDiskRegex *regexp.Regexp
+
+func init() {
+	scsiDiskRegex = regexp.MustCompile("sd[a-z]$")
+}
+
 func TakeSnapshot() []DiskStats {
 	diskStatsFile, err := os.Open("/proc/diskstats")
 	if err != nil {
@@ -32,8 +39,8 @@ func TakeSnapshot() []DiskStats {
 	var snapshot []DiskStats
 	scanner := bufio.NewScanner(diskStatsFile)
 	for scanner.Scan() {
-		diskStats := statsForDisk(scanner.Text())
-		if diskStats != nil {
+		diskStats, err := statsForDisk(scanner.Text())
+		if err == nil {
 			snapshot = append(snapshot, *diskStats)
 		}
 	}
@@ -45,7 +52,7 @@ func TakeSnapshot() []DiskStats {
 	return snapshot
 }
 
-func statsForDisk(rawStats string) *DiskStats {
+func statsForDisk(rawStats string) (*DiskStats, error) {
 	reader := strings.NewReader(rawStats)
 	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
@@ -53,20 +60,19 @@ func statsForDisk(rawStats string) *DiskStats {
 		reads, _ := strconv.Atoi(cols[3])
 		writes, _ := strconv.Atoi(cols[7])
 		name := cols[2]
-		r := regexp.MustCompile("sd[a-z]$")
-		if !r.MatchString(name) {
-			return nil
+		if !scsiDiskRegex.MatchString(name) {
+			return nil, errors.New("disk is a partition")
 		}
 		stats := &DiskStats{
 			Name:   name,
 			Reads:  reads,
 			Writes: writes,
 		}
-		return stats
+		return stats, nil
 	}
 
 	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
-	return nil
+	return nil, errors.New("cannot read disk stats")
 }
