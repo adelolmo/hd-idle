@@ -68,11 +68,11 @@ Note that *dpkg* and *fakeroot* are required.
     
 For amd64 architecture:
     
-    # dpkg -i build/release/hd-idle_1.1_amd64.deb
+    # dpkg -i build/release/hd-idle_1.2_amd64.deb
 
 For arm architecture (e.g. Raspberry Pi)
 
-    # dpkg -i build/release/hd-idle_1.1_armhf.deb
+    # dpkg -i build/release/hd-idle_1.2_armhf.deb
     
 ## Running hd-idle
 
