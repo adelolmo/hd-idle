@@ -57,22 +57,20 @@ binaries into your `GOPATH`:
     $ go get github.com/adelolmo/hd-idle
     $ hd-idle
 
-On Debian you can also clone the repository yourself and build using `./package`.
-Note that *dpkg* and *fakeroot* are required.
+On Debian you can also clone the repository yourself and build using `dpkg-buildpackage`.
 
     $ mkdir -p $GOPATH/src/github.com/adelolmo
     $ cd $GOPATH/src/github.com/adelolmo
     $ git clone https://github.com/adelolmo/hd-idle.git
     $ cd hd-idle
-    $ ./package
+    $ dpkg-buildpackage -a armhf -us -uc -b     
     
-For amd64 architecture:
+The package has been built under `armhf` you can do the same process for `i386`, `amd64`, and `arm64` 
+by substituting the parameter `-a`.
     
-    # dpkg -i build/release/hd-idle_1.2_amd64.deb
+Then install the package:
 
-For arm architecture (e.g. Raspberry Pi)
-
-    # dpkg -i build/release/hd-idle_1.2_armhf.deb
+    # dpkg -i ../hd-idle_1.2_armhf.deb
     
 ## Running hd-idle
 
@@ -83,7 +81,8 @@ In order to run hd-idle, type:
 This will start hd-idle with the default options, causing all SCSI 
 (read: USB, Firewire, SCSI, ...) hard disks to spin down after 10 minutes of inactivity.
 
-On Debian, after editing `/etc/default/hd-idle` and enabling it (`START_HD_IDLE=true`), run hd-idle with:
+If the Debian package was installed, after editing `/etc/default/hd-idle` and enabling it (`START_HD_IDLE=true`), 
+run hd-idle with:
 
     # systemctl start hd-idle
     

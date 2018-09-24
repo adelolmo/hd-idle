@@ -1,11 +1,13 @@
-Package: hd-idle
-Version: {{version}}
+Source: hd-idle
 Section: utils
 Priority: extra
-Architecture: {{architecture}}
 Maintainer: Andoni del Olmo <andoni.delolmo@gmail.com>
+Build-Depends: debhelper (>=9), dh-golang
+Standards-Version: 3.9.4
 Homepage: https://github.com/adelolmo/hd-idle
-Installed-Size: {{size}}
+
+Package: hd-idle
+Architecture: any
 Description: Spin down idle [USB] hard disks
  hd-idle is a utility program for spinning-down external disks after a period
  of idle time. Since most external IDE disk enclosures don't support setting

@@ -1,0 +1,12 @@
+/var/log/hd-idle/console.log {
+	monthly
+	missingok
+	rotate 4
+	compress
+	delaycompress
+	notifempty
+	create 0644 root root
+	postrotate
+		systemctl kill -s SIGHUP hd-idle.service
+	endscript
+}

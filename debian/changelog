@@ -1,0 +1,17 @@
+hd-idle (1.2) unstable; urgency=low
+
+  * Persist user's config across package upgrades.
+
+ -- Andoni del Olmo <andoni.delolmo@gmail.com>  Mon, 17 Sep 2018 22:03:10 +0100
+
+hd-idle (1.1) unstable; urgency=low
+
+  * Add missing feature to spin-down the specified disk immediately.
+
+ -- Andoni del Olmo <andoni.delolmo@gmail.com>  Sun, 16 Sep 2018 18:13:10 +0100
+
+hd-idle (1.0) unstable; urgency=low
+
+  * Add "ata" api call to stop devices on top of the original functionality.
+
+ -- Andoni del Olmo <andoni.delolmo@gmail.com>  Sun, 16 Sep 2018 10:01:10 +0100

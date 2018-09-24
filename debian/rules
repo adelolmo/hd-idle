@@ -1,0 +1,85 @@
+#!/usr/bin/make -f
+
+export DH_OPTIONS
+
+##
+# From git-lfs/git-lfs repo:
+# Looks like dh_golang doesn't set diffrent archs, so you have to do them semi-manually.
+##
+
+## This if-structure is decided on what is passed by the -a flag by dpkg-buildpackage command.
+ifeq ($(DEB_HOST_ARCH), i386)
+	export GOARCH := 386
+else ifeq ($(DEB_HOST_ARCH), amd64)
+	export GOARCH := amd64
+else ifeq ($(DEB_HOST_ARCH), armhf)
+	export GOARCH := arm
+  	# May need to set GOARM as well if your going to target ARM. But for now this works.
+else ifeq ($(DEB_HOST_ARCH), arm64)
+	export GOARCH := arm64
+endif
+
+# Or add your arch that your targeting, these are just examples.
+
+# Directory where compiled binary is placed + debian setup files.
+# Note: If your doing building thru git, you may want to add obj-* to .gitignore
+BUILD_DIR := obj-$(DEB_HOST_GNU_TYPE)
+
+# Required: Put the url (without http://) of your git repo.
+export DH_GOPKG := github.com/adelolmo/hd-idle
+
+# Required: Put the name of your git repo below.
+GIT_REPO_NAME := hd-idle
+
+export PATH := $(CURDIR)/$(BUILD_DIR)/bin:$(PATH)
+
+##
+# From git-lfs/git-lfs repo:
+# by-default, dh_golang only copies *.go and other source - this upsets a bunch of vendor test routines
+##
+export DH_GOLANG_INSTALL_ALL := 1
+
+%:
+	dh $@ --buildsystem=golang --with=golang
+
+override_dh_clean:
+	rm -f debian/debhelper.log
+	dh_clean
+
+override_dh_auto_build:
+	dh_auto_build -- -ldflags "-s -w"
+	##
+	# From git-lfs/git-lfs repo:
+	# dh_golang doesn't do anything here in deb 8, and it's needed in both
+	##
+	if [ "$(DEB_HOST_GNU_TYPE)" != "$(DEB_BUILD_GNU_TYPE)" ]; then\
+		cp -rf $(BUILD_DIR)/bin/*/* $(BUILD_DIR)/bin/; \
+		cp -rf $(BUILD_DIR)/pkg/*/* $(BUILD_DIR)/pkg/; \
+	fi
+
+override_dh_strip:
+	##
+	# From git-lfs/git-lfs repo:
+	# strip disabled as golang upstream doesn't support it and it makes go crash.
+	# See https://launchpad.net/bugs/1200255.
+	##
+
+override_dh_golang:
+	##
+	# From git-lfs/git-lfs repo:
+	# The dh_golang is used to add the Built-using field to the deb.  This is only for reference.
+	# As of https://anonscm.debian.org/cgit/collab-maint/dh-golang.git/commit/script/dh_golang?id=7c3fbec6ea92294477fa8910264fe9bd823f21c3
+	# dh_golang errors out because the go compiler used was not installed via a package.  Therefore the step is skipped
+	##
+
+override_dh_auto_install:
+	install -g 0 -o 0 -d debian/$(GIT_REPO_NAME)/usr/sbin
+	cp $(BUILD_DIR)/bin/hd-idle debian/$(GIT_REPO_NAME)/usr/sbin
+	install -g 0 -o 0 -d debian/$(GIT_REPO_NAME)/lib/systemd/system
+	cp $(GIT_REPO_NAME).service debian/$(GIT_REPO_NAME)/lib/systemd/system
+	install -g 0 -o 0 -d debian/$(GIT_REPO_NAME)/etc/logrotate.d
+	cp $(GIT_REPO_NAME).logrotate debian/$(GIT_REPO_NAME)/etc/logrotate.d/$(GIT_REPO_NAME)
+	install -g 0 -o 0 -d debian/$(GIT_REPO_NAME)/usr/share/$(GIT_REPO_NAME)
+	cp $(GIT_REPO_NAME).conf debian/$(GIT_REPO_NAME)/usr/share/$(GIT_REPO_NAME)/configuration
+	install -g 0 -o 0 -d debian/$(GIT_REPO_NAME)/usr/share/man/man1
+	cp $(GIT_REPO_NAME).1 debian/$(GIT_REPO_NAME)/usr/share/man/man1

@@ -1,0 +1,8 @@
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: hd-idle
+Source: https://github.com/adelolmo/hd-idle
+
+Files: *
+Copyright: 2018 Andoni del Olmo <andoni.delolmo@gmail.com>
+Author: Andoni del Olmo <andoni.delolmo@gmail.com>
+License: GPL-3+
