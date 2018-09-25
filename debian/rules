@@ -77,8 +77,6 @@ override_dh_auto_install:
 	cp $(BUILD_DIR)/bin/hd-idle debian/$(GIT_REPO_NAME)/usr/sbin
 	install -g 0 -o 0 -d debian/$(GIT_REPO_NAME)/lib/systemd/system
 	cp $(GIT_REPO_NAME).service debian/$(GIT_REPO_NAME)/lib/systemd/system
-	install -g 0 -o 0 -d debian/$(GIT_REPO_NAME)/etc/logrotate.d
-	cp $(GIT_REPO_NAME).logrotate debian/$(GIT_REPO_NAME)/etc/logrotate.d/$(GIT_REPO_NAME)
 	install -g 0 -o 0 -d debian/$(GIT_REPO_NAME)/usr/share/$(GIT_REPO_NAME)
 	cp $(GIT_REPO_NAME).conf debian/$(GIT_REPO_NAME)/usr/share/$(GIT_REPO_NAME)/configuration
 	install -g 0 -o 0 -d debian/$(GIT_REPO_NAME)/usr/share/man/man1
