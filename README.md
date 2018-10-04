@@ -63,7 +63,7 @@ On Debian you can also clone the repository yourself and build using `dpkg-build
     $ cd $GOPATH/src/github.com/adelolmo
     $ git clone https://github.com/adelolmo/hd-idle.git
     $ cd hd-idle
-    $ dpkg-buildpackage -a armhf -us -uc -b     
+    $ dpkg-buildpackage -a armhf -us -uc -b
     
 The package has been built under `armhf` you can do the same process for `i386`, `amd64`, and `arm64` 
 by substituting the parameter `-a`.
