@@ -5,10 +5,8 @@ import (
 	"log"
 )
 
-const (
-	// https://en.wikipedia.org/wiki/SCSI_command
-	START_STOP_UNIT = 0x1b
-)
+// https://en.wikipedia.org/wiki/SCSI_command
+const startStopUnit = 0x1b
 
 func StopScsiDevice(device string) {
 	f, err := openDevice(device)
@@ -18,10 +16,10 @@ func StopScsiDevice(device string) {
 	defer f.Close()
 
 	senseBuf := make([]byte, sgio.SENSE_BUF_LEN)
-	inqCmdBlk := []uint8{START_STOP_UNIT, 0, 0, 0, 0, 0}
+	inqCmdBlk := []uint8{startStopUnit, 0, 0, 0, 0, 0}
 	ioHdr := &sgio.SgIoHdr{
 		InterfaceID:    int32('S'),
-		DxferDirection: SG_DXFER_NONE,
+		DxferDirection: SgDxferNone,
 		Cmdp:           &inqCmdBlk[0],
 		CmdLen:         uint8(len(inqCmdBlk)),
 		Sbp:            &senseBuf[0],

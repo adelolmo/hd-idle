@@ -10,9 +10,7 @@ import (
 	"strconv"
 )
 
-const (
-	DEFAULT_IDLE_TIME = 600
-)
+const defaultIdleTime = 600
 
 func main() {
 
@@ -22,7 +20,7 @@ func main() {
 	}
 
 	defaultConf := hdidle.DefaultConf{
-		Idle:        DEFAULT_IDLE_TIME,
+		Idle:        defaultIdleTime,
 		CommandType: hdidle.SCSI,
 		Debug:       false,
 	}
@@ -99,7 +97,28 @@ func main() {
 	}
 	println(config.String())
 
-	gocron.Every(60).Seconds().Do(hdidle.ObserveDiskActivity, config)
+	interval := poolInterval(config.Devices)
+	gocron.Every(interval).Seconds().Do(hdidle.ObserveDiskActivity, config)
 	gocron.NextRun()
 	<-gocron.Start()
+}
+
+func poolInterval(deviceConfs []hdidle.DeviceConf) uint64 {
+	var interval = ^uint64(0)
+
+	if len(deviceConfs) == 0 {
+		return defaultIdleTime / 10
+	}
+
+	for _, device := range deviceConfs {
+		if uint64(device.Idle) < interval {
+			interval = uint64(device.Idle)
+		}
+	}
+
+	sleepTime := interval / 10
+	if sleepTime == 0 {
+		return 1
+	}
+	return sleepTime
 }

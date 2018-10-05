@@ -10,9 +10,9 @@ import (
 )
 
 const (
-	SCSI        = "scsi"
-	ATA         = "ata"
-	DATE_FORMAT = "2006-01-02T15:04:05"
+	SCSI       = "scsi"
+	ATA        = "ata"
+	dateFormat = "2006-01-02T15:04:05"
 )
 
 type DefaultConf struct {
@@ -85,7 +85,7 @@ func updateState(tmp diskstats.DiskStats, config *Config) {
 			"spindown=%s spinup=%s lastIO=%s\n",
 			ds.Name, ds.CommandType, ds.SpunDown,
 			ds.Reads, ds.Writes, ds.IdleTime, idleDuration,
-			ds.SpinDownAt.Format(DATE_FORMAT), ds.SpinUpAt.Format(DATE_FORMAT), ds.LastIoAt.Format(DATE_FORMAT))
+			ds.SpinDownAt.Format(dateFormat), ds.SpinUpAt.Format(dateFormat), ds.LastIoAt.Format(dateFormat))
 	}
 }
 

@@ -8,9 +8,7 @@ import (
 	"unsafe"
 )
 
-const (
-	SG_DXFER_NONE = -1
-)
+const SgDxferNone = -1
 
 func openDevice(fname string) (*os.File, error) {
 	f, err := os.OpenFile(fname, os.O_RDONLY, 0)
