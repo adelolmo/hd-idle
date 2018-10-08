@@ -3,12 +3,19 @@ package diskstats
 import (
 	"bufio"
 	"errors"
+	"io"
 	"log"
 	"os"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
+)
+
+const (
+	deviceNameCol = 2
+	readsCol      = 3
+	writesCol     = 7
 )
 
 type DiskStats struct {
@@ -29,15 +36,19 @@ func init() {
 	scsiDiskRegex = regexp.MustCompile("sd[a-z]$")
 }
 
-func TakeSnapshot() []DiskStats {
-	diskStatsFile, err := os.Open("/proc/diskstats")
+func Snapshot() []DiskStats {
+	f, err := os.Open("/proc/diskstats")
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer diskStatsFile.Close()
+	defer f.Close()
 
+	return ReadSnapshot(f)
+}
+
+func ReadSnapshot(r io.Reader) []DiskStats {
 	var snapshot []DiskStats
-	scanner := bufio.NewScanner(diskStatsFile)
+	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
 		diskStats, err := statsForDisk(scanner.Text())
 		if err == nil {
@@ -57,9 +68,9 @@ func statsForDisk(rawStats string) (*DiskStats, error) {
 	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
 		cols := strings.Fields(scanner.Text())
-		reads, _ := strconv.Atoi(cols[3])
-		writes, _ := strconv.Atoi(cols[7])
-		name := cols[2]
+		name := cols[deviceNameCol]
+		reads, _ := strconv.Atoi(cols[readsCol])
+		writes, _ := strconv.Atoi(cols[writesCol])
 		if !scsiDiskRegex.MatchString(name) {
 			return nil, errors.New("disk is a partition")
 		}

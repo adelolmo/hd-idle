@@ -36,7 +36,7 @@ type Config struct {
 var previousSnapshots []diskstats.DiskStats
 
 func ObserveDiskActivity(config *Config) {
-	actualSnapshot := diskstats.TakeSnapshot()
+	actualSnapshot := diskstats.Snapshot()
 
 	for _, stats := range actualSnapshot {
 		updateState(stats, config)

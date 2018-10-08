@@ -7,3 +7,4 @@ debian/debhelper-build-stamp
 debian/files
 debian/hd-idle.debhelper.log
 debian/hd-idle.substvars
+release
