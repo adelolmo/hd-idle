@@ -30,9 +30,15 @@ The motivation to port hd-idle to Go comes directly from my lack of knowledge in
 and the need to use `ATA` api to set devices to stop.
 
 The original hd-idle written by Christian Mueller relies on the `SCSI` api to work.
-For whatever reason it managed to stop permanently only one of the three external WD
-hard drives connected to my Raspberry Pi. 
+When listing the drives by id, disk starting with `usb` will stop using the original 
+implementation, but disk starting with `ata` will not.
 
+    $ ls /dev/disk/by-id/
+    
+    ata-WDC_WD40EZRX-
+    ata-WDC_WD50EZRX-
+    usb-WD_My_Book_1140_
+    
 hdparm on the other hand was able to stop always the three drives without any problems.
 It uses `ATA` api calls to do the job. So my idea was to replicate hdparm's api call 
 and add it to hd-idle itself.
