@@ -1,4 +1,4 @@
-package hdidle
+package main
 
 import (
 	"fmt"
@@ -66,6 +66,7 @@ func updateState(tmp diskstats.DiskStats, config *Config) {
 		/* disk had some activity */
 		if ds.SpunDown {
 			/* disk was spun down, thus it has just spun up */
+			fmt.Printf("%s spinup\n", ds.Name)
 			if len(config.Defaults.LogFile) > 0 {
 				logSpinup(ds, config.Defaults.LogFile)
 			}

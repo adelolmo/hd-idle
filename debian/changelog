@@ -1,3 +1,17 @@
+hd-idle (1.4) unstable; urgency=low
+
+  * The parameter "-a" now also supports symlinks for disk names. Thus, disks
+    can be specified using something like /dev/disk/by-uuid/... Use "-d" to
+    verify that the resulting disk name is what you want.
+
+    Please note that disk names are resolved to device nodes at startup. Also,
+    since many entries in /dev/disk/by-xxx are actually partitions, partition
+    numbers are automatically removed from the resulting device node.
+
+  * Simply log spinup.
+
+ -- Andoni del Olmo <andoni.delolmo@gmail.com>  Sat, 5 Jan 2019 18:42:00 +0100
+
 hd-idle (1.3) unstable; urgency=low
 
   * Set sleep time to 1/10th of the shortest idle time.

@@ -3,7 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
-	"github.com/adelolmo/hd-idle/hdidle"
+	"github.com/adelolmo/hd-idle/device"
 	"github.com/adelolmo/hd-idle/sgio"
 	"github.com/jasonlvhit/gocron"
 	"os"
@@ -19,16 +19,16 @@ func main() {
 		os.Exit(0)
 	}
 
-	defaultConf := hdidle.DefaultConf{
+	defaultConf := DefaultConf{
 		Idle:        defaultIdleTime,
-		CommandType: hdidle.SCSI,
+		CommandType: SCSI,
 		Debug:       false,
 	}
-	var config = &hdidle.Config{
-		Devices:  []hdidle.DeviceConf{},
+	var config = &Config{
+		Devices:  []DeviceConf{},
 		Defaults: defaultConf,
 	}
-	var deviceConf *hdidle.DeviceConf
+	var deviceConf *DeviceConf
 
 	for index, arg := range os.Args[1:] {
 		switch arg {
@@ -37,8 +37,8 @@ func main() {
 				println("Missing disk argument. Must be a device (e.g. sda)")
 				os.Exit(1)
 			}
-			device := os.Args[index+2]
-			sgio.StopScsiDevice(device)
+			disk := os.Args[index+2]
+			sgio.StopScsiDevice(disk)
 			os.Exit(0)
 
 		case "-a":
@@ -47,8 +47,8 @@ func main() {
 			}
 
 			name := os.Args[index+2]
-			deviceConf = &hdidle.DeviceConf{
-				Name:        name,
+			deviceConf = &DeviceConf{
+				Name:        device.RealPath(name),
 				Idle:        config.Defaults.Idle,
 				CommandType: config.Defaults.CommandType,
 			}
@@ -69,7 +69,7 @@ func main() {
 		case "-c":
 			command := os.Args[index+2]
 			switch command {
-			case hdidle.SCSI, hdidle.ATA:
+			case SCSI, ATA:
 				if deviceConf == nil {
 					config.Defaults.CommandType = command
 					break
@@ -87,7 +87,7 @@ func main() {
 			config.Defaults.Debug = true
 
 		case "h":
-			println("usage: hd-idle [-t <disk>] [-a <name>] [-i <idle_time>] [-c <command_type>] [-l <logfile>] [-d] [-h]\n")
+			println("usage: hd-idle [-t <disk.go>] [-a <name>] [-i <idle_time>] [-c <command_type>] [-l <logfile>] [-d] [-h]\n")
 			os.Exit(0)
 		}
 	}
@@ -98,21 +98,21 @@ func main() {
 	println(config.String())
 
 	interval := poolInterval(config.Devices)
-	gocron.Every(interval).Seconds().Do(hdidle.ObserveDiskActivity, config)
+	gocron.Every(interval).Seconds().Do(ObserveDiskActivity, config)
 	gocron.NextRun()
 	<-gocron.Start()
 }
 
-func poolInterval(deviceConfs []hdidle.DeviceConf) uint64 {
+func poolInterval(deviceConfs []DeviceConf) uint64 {
 	var interval = ^uint64(0)
 
 	if len(deviceConfs) == 0 {
 		return defaultIdleTime / 10
 	}
 
-	for _, device := range deviceConfs {
-		if uint64(device.Idle) < interval {
-			interval = uint64(device.Idle)
+	for _, dev := range deviceConfs {
+		if uint64(dev.Idle) < interval {
+			interval = uint64(dev.Idle)
 		}
 	}
 
