@@ -23,10 +23,14 @@ func StopAtaDevice(device string) {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	defer f.Close()
 
 	sendAtaCommand(f, ataOpStandbyNow1)
 	sendAtaCommand(f, ataOpStandbyNow2)
+
+	err = f.Close()
+	if err != nil {
+		log.Fatalf("Cannot close file %s. Error: %s", device, err)
+	}
 }
 
 func sendAtaCommand(f *os.File, command uint8) {

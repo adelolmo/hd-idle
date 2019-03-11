@@ -38,8 +38,14 @@ func TestRealPath(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			disk := fmt.Sprintf("/tmp/dev/%s", tt.want)
-			os.Create(disk)
-			os.Symlink(disk, tt.args.path)
+			_, err := os.Create(disk)
+			if err != nil {
+				panic(err)
+			}
+			err = os.Symlink(disk, tt.args.path)
+			if err != nil {
+				panic(err)
+			}
 			if got := RealPath(tt.args.path); got != tt.want {
 				t.Errorf("RealPath() = %v, want %v", got, tt.want)
 			}
