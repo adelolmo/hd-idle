@@ -2,9 +2,9 @@
 
 This is a port to Go of Christian Mueller's [hd-idle](http://hd-idle.sf.net)
 
-hd-idle is a utility program for spinning-down external disks after a period
+`hd-idle` is a utility program for spinning-down external disks after a period
 of idle time. Since most external IDE disk enclosures don't support setting
-the IDE idle timer, a program like hd-idle is required to spin down idle
+the IDE idle timer, a program like `hd-idle` is required to spin down idle
 disks automatically.
 
 A word of caution: hard disks don't like spinning up too often. Laptop disks
@@ -12,26 +12,26 @@ are more robust in this respect than desktop disks but if you set your disks
 to spin down after a few seconds you may damage the disk over time due to the
 stress the spin-up causes on the spindle motor and bearings. It seems that
 manufacturers recommend a minimum idle time of 3-5 minutes, the default in
-hd-idle is 10 minutes.
+`hd-idle` is 10 minutes.
 
-One more word of caution: hd-idle will spin down any disk accessible via the
-SCSI layer (USB, IEEE1394, ...) but it will NOT work with real SCSI disks
+One more word of caution: `hd-idle` will spin down any disk accessible via the
+`SCSI` layer (USB, IEEE1394, ...) but it will NOT work with real `SCSI` disks
 because they don't spin up automatically. Thus it's not called scsi-idle and
-I don't recommend using it on a real SCSI system unless you have a kernel
-patch that automatically starts the SCSI disks after receiving a sense buffer
-indicating the disk has been stopped. Without such a patch, real SCSI disks
+I don't recommend using it on a real `SCSI` system unless you have a kernel
+patch that automatically starts the `SCSI` disks after receiving a sense buffer
+indicating the disk has been stopped. Without such a patch, real `SCSI` disks
 won't start again and you can as well pull the plug.
 
 You have been warned...
 
 ## Background
 
-The motivation to port hd-idle to Go comes directly from my lack of knowledge in C
+The motivation to port `hd-idle` to Go comes directly from my lack of knowledge in C
 and the need to use `ATA` api to set devices to stop.
 
-The original hd-idle written by Christian Mueller relies on the `SCSI` api to work.
+The original `hd-idle` written by Christian Mueller relies on the `SCSI` api to work.
 When listing the drives by id, disk starting with `usb` will stop using the original 
-implementation, but disk starting with `ata` will not.
+implementation, but disk starting with `ATA` will not.
 
     $ ls /dev/disk/by-id/
     
@@ -39,13 +39,13 @@ implementation, but disk starting with `ata` will not.
     ata-WDC_WD50EZRX-
     usb-WD_My_Book_1140_
     
-hdparm on the other hand was able to stop always the three drives without any problems.
-It uses `ATA` api calls to do the job. So my idea was to replicate hdparm's api call 
-and add it to hd-idle itself.
+[hdparm](https://en.wikipedia.org/wiki/Hdparm) on the other hand was able to stop always the three drives without any problems.
+It uses `ATA` api calls to do the job. So my idea was to replicate `hdparm`'s api call 
+and add it to `hd-idle` itself.
 
 ## Install
 
-There are various ways of installing hd-idle
+There are various ways of installing `hd-idle`
 
 ### Precompiled binaries
 
@@ -54,7 +54,7 @@ Precompiled binaries for released versions are available in the
 
 ### Building from source
 
-To build hd-idle from the source code yourself you need to have a working
+To build `hd-idle` from the source code yourself you need to have a working
 Go environment with [version 1.8 or greater installed](http://golang.org/doc/install).
 
 You can directly use the `go` tool to download and install the `hd-idle` 
@@ -71,20 +71,20 @@ On Debian you can also clone the repository yourself and build using `dpkg-build
     $ cd hd-idle
     $ dpkg-buildpackage -a armhf -us -uc -b
     
-The package has been built under `armhf` you can do the same process for `i386`, `amd64`, and `arm64` 
+In the example above, the package is built for `armhf`, but you can build it also for the platforms `i386`, `amd64`, and `arm64` 
 by substituting the parameter `-a`.
     
 Then install the package:
 
-    # dpkg -i ../hd-idle_1.2_armhf.deb
+    # dpkg -i ../hd-idle_1.4_armhf.deb
     
 ## Running hd-idle
 
-In order to run hd-idle, type: 
+In order to run `hd-idle`, type: 
 
     $ hd-idle
     
-This will start hd-idle with the default options, causing all SCSI 
+This will start `hd-idle` with the default options, causing all `SCSI` 
 (read: USB, Firewire, SCSI, ...) hard disks to spin down after 10 minutes of inactivity.
 
 If the Debian package was installed, after editing `/etc/default/hd-idle` and enabling it (`START_HD_IDLE=true`), 
@@ -92,12 +92,12 @@ run hd-idle with:
 
     # systemctl start hd-idle
     
-To enable hd-idle on reboot:
+To enable `hd-idle` on reboot:
 
     # systemctl enable hd-idle    
 
-Please note that hd-idle uses */proc/diskstats* to read disk statistics. If
-this file is not present, hd-idle won't work.
+Please note that `hd-idle` uses */proc/diskstats* to read disk statistics. If
+this file is not present, `hd-idle` won't work.
 
 In case of problems, use the debug option *-d* to get further information.
 
