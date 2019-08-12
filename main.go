@@ -98,6 +98,7 @@ func main() {
 	println(config.String())
 
 	interval := poolInterval(config.Devices)
+	config.SkewTime = interval * 3
 	gocron.Every(interval).Seconds().Do(ObserveDiskActivity, config)
 	gocron.NextRun()
 	<-gocron.Start()

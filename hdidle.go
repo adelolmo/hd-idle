@@ -31,16 +31,21 @@ type DeviceConf struct {
 type Config struct {
 	Devices  []DeviceConf
 	Defaults DefaultConf
+	SkewTime uint64
 }
 
 var previousSnapshots []diskstats.DiskStats
+var now = time.Now()
+var lastNow = time.Now()
 
 func ObserveDiskActivity(config *Config) {
 	actualSnapshot := diskstats.Snapshot()
 
+	now = time.Now()
 	for _, stats := range actualSnapshot {
 		updateState(stats, config)
 	}
+	lastNow = now
 }
 
 func updateState(tmp diskstats.DiskStats, config *Config) {
@@ -50,14 +55,23 @@ func updateState(tmp diskstats.DiskStats, config *Config) {
 		return
 	}
 
+	if uint64(now.Sub(lastNow).Seconds()) > config.SkewTime {
+		/* we slept too long, assume a suspend event and disks may be spun up */
+		/* reset spin status and timers */
+		previousSnapshots[dsi].SpinUpAt = now
+		previousSnapshots[dsi].LastIoAt = now
+		previousSnapshots[dsi].SpunDown = false
+		logRemonitor(previousSnapshots[dsi], config.Defaults.LogFile)
+	}
+
 	ds := previousSnapshots[dsi]
 	if ds.Writes == tmp.Writes && ds.Reads == tmp.Reads {
 		if !ds.SpunDown {
 			/* no activity on this disk and still running */
-			idleDuration := int(time.Now().Sub(ds.LastIoAt).Seconds())
+			idleDuration := int(now.Sub(ds.LastIoAt).Seconds())
 			if ds.IdleTime != 0 && idleDuration > ds.IdleTime {
 				spindownDisk(ds.Name, ds.CommandType)
-				previousSnapshots[dsi].SpinDownAt = time.Now()
+				previousSnapshots[dsi].SpinDownAt = now
 				previousSnapshots[dsi].SpunDown = true
 			}
 		}
@@ -70,17 +84,17 @@ func updateState(tmp diskstats.DiskStats, config *Config) {
 			if len(config.Defaults.LogFile) > 0 {
 				logSpinup(ds, config.Defaults.LogFile)
 			}
-			previousSnapshots[dsi].SpinUpAt = time.Now()
+			previousSnapshots[dsi].SpinUpAt = now
 		}
 		previousSnapshots[dsi].Reads = tmp.Reads
 		previousSnapshots[dsi].Writes = tmp.Writes
-		previousSnapshots[dsi].LastIoAt = time.Now()
+		previousSnapshots[dsi].LastIoAt = now
 		previousSnapshots[dsi].SpunDown = false
 	}
 
 	if config.Defaults.Debug {
 		ds = previousSnapshots[dsi]
-		idleDuration := int(time.Now().Sub(ds.LastIoAt).Seconds())
+		idleDuration := int(now.Sub(ds.LastIoAt).Seconds())
 		fmt.Printf("disk=%s command=%s spunDown=%t "+
 			"reads=%d writes=%d idleTime=%d idleDuration=%d "+
 			"spindown=%s spinup=%s lastIO=%s\n",
@@ -155,6 +169,24 @@ func logSpinup(ds diskstats.DiskStats, file string) {
 	text := fmt.Sprintf("date: %s, time: %s, disk: %s, running: %d, stopped: %d\n",
 		now.Format("2006-01-02"), now.Format("15:04:05"), ds.Name,
 		int(ds.SpinDownAt.Sub(ds.SpinUpAt).Seconds()), int(now.Sub(ds.SpinDownAt).Seconds()))
+	if _, err = cacheFile.WriteString(text); err != nil {
+		log.Fatalf("Cannot write into file %s. Error: %s", file, err)
+	}
+
+	err = cacheFile.Close()
+	if err != nil {
+		log.Fatalf("Cannot close file %s. Error: %s", file, err)
+	}
+}
+
+func logRemonitor(ds diskstats.DiskStats, file string) {
+	cacheFile, err := os.OpenFile(file, os.O_APPEND|os.O_WRONLY, 0600)
+	if err != nil {
+		log.Fatalf("Cannot open file %s. Error: %s", file, err)
+	}
+	now := time.Now()
+	text := fmt.Sprintf("date: %s, time: %s, disk: %s, assuming disk spun up after long sleep\n",
+		now.Format("2006-01-02"), now.Format("15:04:05"), ds.Name)
 	if _, err = cacheFile.WriteString(text); err != nil {
 		log.Fatalf("Cannot write into file %s. Error: %s", file, err)
 	}
