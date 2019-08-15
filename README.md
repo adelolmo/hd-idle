@@ -76,7 +76,7 @@ by substituting the parameter `-a`.
     
 Then install the package:
 
-    # dpkg -i ../hd-idle_1.4_armhf.deb
+    # dpkg -i ../hd-idle_1.5_armhf.deb
     
 ## Running hd-idle
 
