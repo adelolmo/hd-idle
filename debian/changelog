@@ -1,3 +1,12 @@
+hd-idle (1.5) unstable; urgency=low
+
+  * Monitor the skew between monitoring cycles, on discovery of clock skew
+    reset the drive spin_down status to "spun up" and reset the time to current
+    in order to capture potential high loading or (more likely) recovery from
+    suspend or sleep
+
+ -- Andoni del Olmo <andoni.delolmo@gmail.com>  Sat, 13 Aug 2019 21:15:00 +0100
+
 hd-idle (1.4) unstable; urgency=low
 
   * The parameter "-a" now also supports symlinks for disk names. Thus, disks
