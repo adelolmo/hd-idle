@@ -61,7 +61,7 @@ func updateState(tmp diskstats.DiskStats, config *Config) {
 		previousSnapshots[dsi].SpinUpAt = now
 		previousSnapshots[dsi].LastIoAt = now
 		previousSnapshots[dsi].SpunDown = false
-		logRemonitor(previousSnapshots[dsi], config.Defaults.LogFile)
+		logSpinupAfterSleep(previousSnapshots[dsi].Name, config.Defaults.LogFile)
 	}
 
 	ds := previousSnapshots[dsi]
@@ -161,36 +161,27 @@ func spindownDisk(deviceName, command string) {
 }
 
 func logSpinup(ds diskstats.DiskStats, file string) {
-	cacheFile, err := os.OpenFile(file, os.O_APPEND|os.O_WRONLY, 0600)
-	if err != nil {
-		log.Fatalf("Cannot open file %s. Error: %s", file, err)
-	}
 	now := time.Now()
 	text := fmt.Sprintf("date: %s, time: %s, disk: %s, running: %d, stopped: %d\n",
 		now.Format("2006-01-02"), now.Format("15:04:05"), ds.Name,
 		int(ds.SpinDownAt.Sub(ds.SpinUpAt).Seconds()), int(now.Sub(ds.SpinDownAt).Seconds()))
-	if _, err = cacheFile.WriteString(text); err != nil {
-		log.Fatalf("Cannot write into file %s. Error: %s", file, err)
-	}
-
-	err = cacheFile.Close()
-	if err != nil {
-		log.Fatalf("Cannot close file %s. Error: %s", file, err)
-	}
+	logToFile(file, text)
 }
 
-func logRemonitor(ds diskstats.DiskStats, file string) {
+func logSpinupAfterSleep(name string, file string) {
+	text := fmt.Sprintf("date: %s, time: %s, disk: %s, assuming disk spun up after long sleep\n",
+		now.Format("2006-01-02"), now.Format("15:04:05"), name)
+	logToFile(file, text)
+}
+
+func logToFile(file string, text string) {
 	cacheFile, err := os.OpenFile(file, os.O_APPEND|os.O_WRONLY, 0600)
 	if err != nil {
 		log.Fatalf("Cannot open file %s. Error: %s", file, err)
 	}
-	now := time.Now()
-	text := fmt.Sprintf("date: %s, time: %s, disk: %s, assuming disk spun up after long sleep\n",
-		now.Format("2006-01-02"), now.Format("15:04:05"), ds.Name)
 	if _, err = cacheFile.WriteString(text); err != nil {
 		log.Fatalf("Cannot write into file %s. Error: %s", file, err)
 	}
-
 	err = cacheFile.Close()
 	if err != nil {
 		log.Fatalf("Cannot close file %s. Error: %s", file, err)
