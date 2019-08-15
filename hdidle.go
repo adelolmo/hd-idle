@@ -198,6 +198,6 @@ func logRemonitor(ds diskstats.DiskStats, file string) {
 }
 
 func (c *Config) String() string {
-	return fmt.Sprintf("defaultIdle=%d, defaultCommand=%s, debug=%t devices=%v",
-		c.Defaults.Idle, c.Defaults.CommandType, c.Defaults.Debug, c.Devices)
+	return fmt.Sprintf("defaultIdle=%d, defaultCommand=%s, debug=%t, devices=%v, logFile=%s",
+		c.Defaults.Idle, c.Defaults.CommandType, c.Defaults.Debug, c.Devices, c.Defaults.LogFile)
 }
