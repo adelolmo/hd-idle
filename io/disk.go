@@ -1,4 +1,4 @@
-package device
+package io
 
 import (
 	"os"
@@ -15,5 +15,5 @@ func RealPath(path string) string {
 		return filepath.Base(s)
 	}
 
-	return filepath.Base(path)
+	return ""
 }

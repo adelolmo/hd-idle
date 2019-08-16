@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/adelolmo/hd-idle/diskstats"
+	"github.com/adelolmo/hd-idle/io"
 	"github.com/adelolmo/hd-idle/sgio"
 	"log"
 	"os"
@@ -16,14 +17,16 @@ const (
 )
 
 type DefaultConf struct {
-	Idle        int
-	CommandType string
-	Debug       bool
-	LogFile     string
+	Idle          int
+	CommandType   string
+	Debug         bool
+	LogFile       string
+	SymlinkPolicy int
 }
 
 type DeviceConf struct {
 	Name        string
+	GivenName   string
 	Idle        int
 	CommandType string
 }
@@ -136,6 +139,10 @@ func initDevice(stats diskstats.DiskStats, config *Config) diskstats.DiskStats {
 
 func deviceConfig(diskName string, config *Config) *DeviceConf {
 	for _, device := range config.Devices {
+		if len(device.Name) == 0 {
+			path := io.RealPath(device.GivenName)
+			device.Name = path
+		}
 		if device.Name == diskName {
 			return &device
 		}

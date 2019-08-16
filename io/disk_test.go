@@ -1,4 +1,4 @@
-package device
+package io
 
 import (
 	"fmt"
@@ -7,14 +7,7 @@ import (
 )
 
 func TestRealPath(t *testing.T) {
-	err := os.RemoveAll("/tmp/dev")
-	if err != nil {
-		panic(err)
-	}
-	err = os.MkdirAll("/tmp/dev/disk/by-id", os.ModePerm)
-	if err != nil {
-		panic("cannot create tmp dir")
-	}
+
 	type args struct {
 		path string
 	}
@@ -37,6 +30,12 @@ func TestRealPath(t *testing.T) {
 			withSymlink: false,
 		},
 		{
+			name:        "wrong symlink by id",
+			args:        args{path: "/tmp/dev/disk/by-id/ata-SAMSUNG_HD103SJ"},
+			want:        "",
+			withSymlink: false,
+		},
+		{
 			name:        "symlink by id",
 			args:        args{path: "/tmp/dev/disk/by-id/ata-SAMSUNG_HD103SJ"},
 			want:        "sdc",
@@ -44,16 +43,26 @@ func TestRealPath(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		err := os.RemoveAll("/tmp/dev")
+		if err != nil {
+			panic(err)
+		}
+		err = os.MkdirAll("/tmp/dev/disk/by-id", os.ModePerm)
+		if err != nil {
+			panic("cannot create tmp dir")
+		}
 		t.Run(tt.name, func(t *testing.T) {
-			disk := fmt.Sprintf("/tmp/dev/%s", tt.want)
-			_, err := os.Create(disk)
-			if err != nil {
-				panic(err)
-			}
-			if tt.withSymlink {
-				err = os.Symlink(disk, tt.args.path)
+			if len(tt.want) > 0 {
+				disk := fmt.Sprintf("/tmp/dev/%s", tt.want)
+				_, err := os.Create(disk)
 				if err != nil {
 					panic(err)
+				}
+				if tt.withSymlink {
+					err = os.Symlink(disk, tt.args.path)
+					if err != nil {
+						panic(err)
+					}
 				}
 			}
 			if got := RealPath(tt.args.path); got != tt.want {

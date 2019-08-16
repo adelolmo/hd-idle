@@ -3,7 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
-	"github.com/adelolmo/hd-idle/device"
+	"github.com/adelolmo/hd-idle/io"
 	"github.com/adelolmo/hd-idle/sgio"
 	"github.com/jasonlvhit/gocron"
 	"os"
@@ -20,9 +20,10 @@ func main() {
 	}
 
 	defaultConf := DefaultConf{
-		Idle:        defaultIdleTime,
-		CommandType: SCSI,
-		Debug:       false,
+		Idle:          defaultIdleTime,
+		CommandType:   SCSI,
+		Debug:         false,
+		SymlinkPolicy: 0,
 	}
 	var config = &Config{
 		Devices:  []DeviceConf{},
@@ -41,6 +42,15 @@ func main() {
 			sgio.StopScsiDevice(disk)
 			os.Exit(0)
 
+		case "-s":
+			s := os.Args[index+2]
+			symlinkPolicy, err := strconv.Atoi(s)
+			if err != nil {
+				println(errors.New(fmt.Sprintf("Wrong symlink_policy -s %d. Must be a number", symlinkPolicy)))
+				os.Exit(1)
+			}
+			defaultConf.SymlinkPolicy = symlinkPolicy
+
 		case "-a":
 			if deviceConf != nil {
 				config.Devices = append(config.Devices, *deviceConf)
@@ -48,7 +58,8 @@ func main() {
 
 			name := os.Args[index+2]
 			deviceConf = &DeviceConf{
-				Name:        device.RealPath(name),
+				Name:        io.RealPath(name),
+				GivenName:   name,
 				Idle:        config.Defaults.Idle,
 				CommandType: config.Defaults.CommandType,
 			}
