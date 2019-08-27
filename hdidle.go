@@ -45,10 +45,31 @@ func ObserveDiskActivity(config *Config) {
 	actualSnapshot := diskstats.Snapshot()
 
 	now = time.Now()
+	resolveSymlinks(config)
 	for _, stats := range actualSnapshot {
 		updateState(stats, config)
 	}
 	lastNow = now
+}
+
+func resolveSymlinks(config *Config) {
+	if config.Defaults.SymlinkPolicy == 0 {
+		return
+	}
+	for i := range config.Devices {
+		device := config.Devices[i]
+		if len(device.Name) == 0 {
+			realPath, err := io.RealPath(device.GivenName)
+			if err == nil {
+				config.Devices[i].Name = realPath
+				logToFile(config.Defaults.LogFile,
+					fmt.Sprintf("symlink %s resolved to %s\n", device.GivenName, realPath))
+			}
+			if err != nil && config.Defaults.Debug {
+				fmt.Printf("Cannot resolve sysmlink %s\n", device.GivenName)
+			}
+		}
+	}
 }
 
 func updateState(tmp diskstats.DiskStats, config *Config) {
@@ -139,10 +160,6 @@ func initDevice(stats diskstats.DiskStats, config *Config) diskstats.DiskStats {
 
 func deviceConfig(diskName string, config *Config) *DeviceConf {
 	for _, device := range config.Devices {
-		if len(device.Name) == 0 {
-			path := io.RealPath(device.GivenName)
-			device.Name = path
-		}
 		if device.Name == diskName {
 			return &device
 		}
@@ -196,6 +213,6 @@ func logToFile(file string, text string) {
 }
 
 func (c *Config) String() string {
-	return fmt.Sprintf("defaultIdle=%d, defaultCommand=%s, debug=%t, devices=%v, logFile=%s",
-		c.Defaults.Idle, c.Defaults.CommandType, c.Defaults.Debug, c.Devices, c.Defaults.LogFile)
+	return fmt.Sprintf("symlinkPolicy=%d, defaultIdle=%d, defaultCommand=%s, debug=%t, devices=%v, logFile=%s",
+		c.Defaults.SymlinkPolicy, c.Defaults.Idle, c.Defaults.CommandType, c.Defaults.Debug, c.Devices, c.Defaults.LogFile)
 }

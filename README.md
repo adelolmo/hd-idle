@@ -118,7 +118,15 @@ Command line options:
 + -c *command_type*       
                         Api call to stop the device. Possible values are `scsi`
                         (default value) and `ata`.
-                                            
+
++ -s *symlink_policy*   
+                        Set the policy to resolve symlinks for devices. If set 
+                        to `0`, symlinks are resolve only on start. If set to `1`,
+                        symlinks are also resolved on runtime until success.
+                        By default symlinks are only resolve on start. If the 
+                        symlink doesn't resolve to a device, the default
+                        configuration will be applied.
+
 + -l *logfile*            
                         Name of logfile (written only after a disk has spun
                         up). Please note that this option might cause the

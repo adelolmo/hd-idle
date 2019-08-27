@@ -46,10 +46,10 @@ func main() {
 			s := os.Args[index+2]
 			symlinkPolicy, err := strconv.Atoi(s)
 			if err != nil {
-				println(errors.New(fmt.Sprintf("Wrong symlink_policy -s %d. Must be a number", symlinkPolicy)))
+				println(errors.New(fmt.Sprintf("Wrong symlink_policy -s %d. Must be a 0 or 1", symlinkPolicy)))
 				os.Exit(1)
 			}
-			defaultConf.SymlinkPolicy = symlinkPolicy
+			config.Defaults.SymlinkPolicy = symlinkPolicy
 
 		case "-a":
 			if deviceConf != nil {
@@ -57,8 +57,14 @@ func main() {
 			}
 
 			name := os.Args[index+2]
+			deviceRealPath, err := io.RealPath(name)
+			if err != nil {
+				deviceRealPath = ""
+				println("Unable to resolve symlink:", name)
+			}
+			//println("name: " + deviceRealPath + " givenName: " + name)
 			deviceConf = &DeviceConf{
-				Name:        io.RealPath(name),
+				Name:        deviceRealPath,
 				GivenName:   name,
 				Idle:        config.Defaults.Idle,
 				CommandType: config.Defaults.CommandType,
@@ -98,7 +104,8 @@ func main() {
 			config.Defaults.Debug = true
 
 		case "h":
-			println("usage: hd-idle [-t <disk.go>] [-a <name>] [-i <idle_time>] [-c <command_type>] [-l <logfile>] [-d] [-h]\n")
+			println("usage: hd-idle [-t <disk>] [-s <symlink_policy>] [-a <name>] [-i <idle_time>] " +
+				"[-c <command_type>] [-l <logfile>] [-d] [-h]\n")
 			os.Exit(0)
 		}
 	}
