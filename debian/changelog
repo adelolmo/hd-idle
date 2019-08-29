@@ -6,7 +6,7 @@ hd-idle (1.6) unstable; urgency=low
     If the parameter "-s" is set to 1, disk symlinks will be also resolve during
     execution until the symlink is resolved.
 
- -- Andoni del Olmo <andoni.delolmo@gmail.com>  Sat, 20 Aug 2019 21:15:00 +0100
+ -- Andoni del Olmo <andoni.delolmo@gmail.com>  Sat, 28 Aug 2019 21:15:00 +0100
 
 hd-idle (1.5) unstable; urgency=low
 

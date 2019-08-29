@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"github.com/adelolmo/hd-idle/io"
 	"github.com/adelolmo/hd-idle/sgio"
@@ -10,12 +9,16 @@ import (
 	"strconv"
 )
 
-const defaultIdleTime = 600
+const (
+	defaultIdleTime     = 600
+	symlinkResolveOnce  = 0
+	symlinkResolveRetry = 1
+)
 
 func main() {
 
 	if os.Getenv("START_HD_IDLE") == "false" {
-		println("START_HD_IDLE=false exiting now.")
+		fmt.Println("START_HD_IDLE=false exiting now.")
 		os.Exit(0)
 	}
 
@@ -35,7 +38,7 @@ func main() {
 		switch arg {
 		case "-t":
 			if len(os.Args) < 3 {
-				println("Missing disk argument. Must be a device (e.g. sda)")
+				fmt.Println("Missing disk argument. Must be a device (e.g. sda)")
 				os.Exit(1)
 			}
 			disk := os.Args[index+2]
@@ -44,12 +47,15 @@ func main() {
 
 		case "-s":
 			s := os.Args[index+2]
-			symlinkPolicy, err := strconv.Atoi(s)
-			if err != nil {
-				println(errors.New(fmt.Sprintf("Wrong symlink_policy -s %d. Must be a 0 or 1", symlinkPolicy)))
+			switch s {
+			case "0":
+				config.Defaults.SymlinkPolicy = symlinkResolveOnce
+			case "1":
+				config.Defaults.SymlinkPolicy = symlinkResolveRetry
+			default:
+				fmt.Printf("Wrong symlink_policy -s %s. Must be 0 or 1\n", s)
 				os.Exit(1)
 			}
-			config.Defaults.SymlinkPolicy = symlinkPolicy
 
 		case "-a":
 			if deviceConf != nil {
@@ -60,7 +66,7 @@ func main() {
 			deviceRealPath, err := io.RealPath(name)
 			if err != nil {
 				deviceRealPath = ""
-				println("Unable to resolve symlink:", name)
+				fmt.Printf("Unable to resolve symlink: %s\n", name)
 			}
 			//println("name: " + deviceRealPath + " givenName: " + name)
 			deviceConf = &DeviceConf{
@@ -74,7 +80,7 @@ func main() {
 			s := os.Args[index+2]
 			idle, err := strconv.Atoi(s)
 			if err != nil {
-				println(errors.New(fmt.Sprintf("Wrong idle_time -i %d. Must be a number", idle)))
+				fmt.Printf("Wrong idle_time -i %d. Must be a number", idle)
 				os.Exit(1)
 			}
 			if deviceConf == nil {
@@ -93,7 +99,7 @@ func main() {
 				}
 				deviceConf.CommandType = command
 			default:
-				println(errors.New(fmt.Sprintf("Wrong command_type -c %s. Must be one of: scsi, ata", command)))
+				fmt.Printf("Wrong command_type -c %s. Must be one of: scsi, ata", command)
 				os.Exit(1)
 			}
 
@@ -104,8 +110,8 @@ func main() {
 			config.Defaults.Debug = true
 
 		case "h":
-			println("usage: hd-idle [-t <disk>] [-s <symlink_policy>] [-a <name>] [-i <idle_time>] " +
-				"[-c <command_type>] [-l <logfile>] [-d] [-h]\n")
+			fmt.Println("usage: hd-idle [-t <disk>] [-s <symlink_policy>] [-a <name>] [-i <idle_time>] " +
+				"[-c <command_type>] [-l <logfile>] [-d] [-h]")
 			os.Exit(0)
 		}
 	}
@@ -113,7 +119,7 @@ func main() {
 	if deviceConf != nil {
 		config.Devices = append(config.Devices, *deviceConf)
 	}
-	println(config.String())
+	fmt.Println(config.String())
 
 	interval := poolInterval(config.Devices)
 	config.SkewTime = interval * 3

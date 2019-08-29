@@ -50,7 +50,7 @@ There are various ways of installing `hd-idle`
 ### Precompiled binaries
 
 Precompiled binaries for released versions are available in the 
-[*releases* section](https://github.com/adelolmo/hd-idle/releases).
+[*releases*](https://github.com/adelolmo/hd-idle/releases) section.
 
 ### Building from source
 
@@ -69,14 +69,11 @@ On Debian you can also clone the repository yourself and build using `dpkg-build
     $ cd $GOPATH/src/github.com/adelolmo
     $ git clone https://github.com/adelolmo/hd-idle.git
     $ cd hd-idle
-    $ dpkg-buildpackage -a armhf -us -uc -b
-    
-In the example above, the package is built for `armhf`, but you can build it also for the platforms `i386`, `amd64`, and `arm64` 
-by substituting the parameter `-a`.
+    $ dpkg-buildpackage -us -uc -b
     
 Then install the package:
 
-    # dpkg -i ../hd-idle_1.5_armhf.deb
+    # dpkg -i ../hd-idle*.deb
     
 ## Running hd-idle
 
@@ -150,8 +147,8 @@ Miscellaneous options:
 
 Regarding the parameter *-a*:
 
-The parameter *-a* can be used to set a filter on
-the disk's device name (omit /dev/) for subsequent idle-time settings.
+The parameter *-a* can be used to set a filter on the disk's device name (omit /dev/) 
+for subsequent idle-time settings.
 
 1) 
     A *-i* option before the first *-a* option will set the default idle time.
