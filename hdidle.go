@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/adelolmo/hd-idle/diskstats"
+	"github.com/adelolmo/hd-idle/io"
 	"github.com/adelolmo/hd-idle/sgio"
 	"log"
 	"os"
@@ -16,14 +17,16 @@ const (
 )
 
 type DefaultConf struct {
-	Idle        int
-	CommandType string
-	Debug       bool
-	LogFile     string
+	Idle          int
+	CommandType   string
+	Debug         bool
+	LogFile       string
+	SymlinkPolicy int
 }
 
 type DeviceConf struct {
 	Name        string
+	GivenName   string
 	Idle        int
 	CommandType string
 }
@@ -42,10 +45,31 @@ func ObserveDiskActivity(config *Config) {
 	actualSnapshot := diskstats.Snapshot()
 
 	now = time.Now()
+	resolveSymlinks(config)
 	for _, stats := range actualSnapshot {
 		updateState(stats, config)
 	}
 	lastNow = now
+}
+
+func resolveSymlinks(config *Config) {
+	if config.Defaults.SymlinkPolicy == 0 {
+		return
+	}
+	for i := range config.Devices {
+		device := config.Devices[i]
+		if len(device.Name) == 0 {
+			realPath, err := io.RealPath(device.GivenName)
+			if err == nil {
+				config.Devices[i].Name = realPath
+				logToFile(config.Defaults.LogFile,
+					fmt.Sprintf("symlink %s resolved to %s", device.GivenName, realPath))
+			}
+			if err != nil && config.Defaults.Debug {
+				fmt.Printf("Cannot resolve sysmlink %s\n", device.GivenName)
+			}
+		}
+	}
 }
 
 func updateState(tmp diskstats.DiskStats, config *Config) {
@@ -81,9 +105,7 @@ func updateState(tmp diskstats.DiskStats, config *Config) {
 		if ds.SpunDown {
 			/* disk was spun down, thus it has just spun up */
 			fmt.Printf("%s spinup\n", ds.Name)
-			if len(config.Defaults.LogFile) > 0 {
-				logSpinup(ds, config.Defaults.LogFile)
-			}
+			logSpinup(ds, config.Defaults.LogFile)
 			previousSnapshots[dsi].SpinUpAt = now
 		}
 		previousSnapshots[dsi].Reads = tmp.Reads
@@ -162,33 +184,35 @@ func spindownDisk(deviceName, command string) {
 
 func logSpinup(ds diskstats.DiskStats, file string) {
 	now := time.Now()
-	text := fmt.Sprintf("date: %s, time: %s, disk: %s, running: %d, stopped: %d\n",
+	text := fmt.Sprintf("date: %s, time: %s, disk: %s, running: %d, stopped: %d",
 		now.Format("2006-01-02"), now.Format("15:04:05"), ds.Name,
 		int(ds.SpinDownAt.Sub(ds.SpinUpAt).Seconds()), int(now.Sub(ds.SpinDownAt).Seconds()))
 	logToFile(file, text)
 }
 
 func logSpinupAfterSleep(name string, file string) {
-	text := fmt.Sprintf("date: %s, time: %s, disk: %s, assuming disk spun up after long sleep\n",
+	text := fmt.Sprintf("date: %s, time: %s, disk: %s, assuming disk spun up after long sleep",
 		now.Format("2006-01-02"), now.Format("15:04:05"), name)
 	logToFile(file, text)
 }
 
 func logToFile(file string, text string) {
-	cacheFile, err := os.OpenFile(file, os.O_APPEND|os.O_WRONLY, 0600)
-	if err != nil {
-		log.Fatalf("Cannot open file %s. Error: %s", file, err)
-	}
-	if _, err = cacheFile.WriteString(text); err != nil {
-		log.Fatalf("Cannot write into file %s. Error: %s", file, err)
-	}
-	err = cacheFile.Close()
-	if err != nil {
-		log.Fatalf("Cannot close file %s. Error: %s", file, err)
+	if len(file) > 0 {
+		cacheFile, err := os.OpenFile(file, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
+		if err != nil {
+			log.Fatalf("Cannot open file %s. Error: %s", file, err)
+		}
+		if _, err = cacheFile.WriteString(text + "\n"); err != nil {
+			log.Fatalf("Cannot write into file %s. Error: %s", file, err)
+		}
+		err = cacheFile.Close()
+		if err != nil {
+			log.Fatalf("Cannot close file %s. Error: %s", file, err)
+		}
 	}
 }
 
 func (c *Config) String() string {
-	return fmt.Sprintf("defaultIdle=%d, defaultCommand=%s, debug=%t, devices=%v, logFile=%s",
-		c.Defaults.Idle, c.Defaults.CommandType, c.Defaults.Debug, c.Devices, c.Defaults.LogFile)
+	return fmt.Sprintf("symlinkPolicy=%d, defaultIdle=%d, defaultCommand=%s, debug=%t, devices=%v, logFile=%s",
+		c.Defaults.SymlinkPolicy, c.Defaults.Idle, c.Defaults.CommandType, c.Defaults.Debug, c.Devices, c.Defaults.LogFile)
 }

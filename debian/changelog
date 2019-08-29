@@ -1,3 +1,13 @@
+hd-idle (1.6) unstable; urgency=low
+
+  * The parameter "-s" allows to resolve symlinks for disk names also in runtime.
+    It is disable by default, because resolving symlinks causes an overhead.
+    That means that disk symlinks only get resolved on start up by default.
+    If the parameter "-s" is set to 1, disk symlinks will be also resolve during
+    execution until the symlink is resolved.
+
+ -- Andoni del Olmo <andoni.delolmo@gmail.com>  Wed, 28 Aug 2019 19:33:00 +0100
+
 hd-idle (1.5) unstable; urgency=low
 
   * Monitor the skew between monitoring cycles, on discovery of clock skew

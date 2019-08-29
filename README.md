@@ -50,7 +50,7 @@ There are various ways of installing `hd-idle`
 ### Precompiled binaries
 
 Precompiled binaries for released versions are available in the 
-[*releases* section](https://github.com/adelolmo/hd-idle/releases).
+[*releases*](https://github.com/adelolmo/hd-idle/releases) section.
 
 ### Building from source
 
@@ -69,14 +69,11 @@ On Debian you can also clone the repository yourself and build using `dpkg-build
     $ cd $GOPATH/src/github.com/adelolmo
     $ git clone https://github.com/adelolmo/hd-idle.git
     $ cd hd-idle
-    $ dpkg-buildpackage -a armhf -us -uc -b
-    
-In the example above, the package is built for `armhf`, but you can build it also for the platforms `i386`, `amd64`, and `arm64` 
-by substituting the parameter `-a`.
+    $ dpkg-buildpackage -us -uc -b
     
 Then install the package:
 
-    # dpkg -i ../hd-idle_1.5_armhf.deb
+    # dpkg -i ../hd-idle*.deb
     
 ## Running hd-idle
 
@@ -118,7 +115,15 @@ Command line options:
 + -c *command_type*       
                         Api call to stop the device. Possible values are `scsi`
                         (default value) and `ata`.
-                                            
+
++ -s *symlink_policy*   
+                        Set the policy to resolve symlinks for devices. If set 
+                        to `0`, symlinks are resolve only on start. If set to `1`,
+                        symlinks are also resolved on runtime until success.
+                        By default symlinks are only resolve on start. If the 
+                        symlink doesn't resolve to a device, the default
+                        configuration will be applied.
+
 + -l *logfile*            
                         Name of logfile (written only after a disk has spun
                         up). Please note that this option might cause the
@@ -142,8 +147,8 @@ Miscellaneous options:
 
 Regarding the parameter *-a*:
 
-The parameter *-a* can be used to set a filter on
-the disk's device name (omit /dev/) for subsequent idle-time settings.
+The parameter *-a* can be used to set a filter on the disk's device name (omit /dev/) 
+for subsequent idle-time settings.
 
 1) 
     A *-i* option before the first *-a* option will set the default idle time.
