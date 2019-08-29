@@ -63,7 +63,7 @@ func resolveSymlinks(config *Config) {
 			if err == nil {
 				config.Devices[i].Name = realPath
 				logToFile(config.Defaults.LogFile,
-					fmt.Sprintf("symlink %s resolved to %s\n", device.GivenName, realPath))
+					fmt.Sprintf("symlink %s resolved to %s", device.GivenName, realPath))
 			}
 			if err != nil && config.Defaults.Debug {
 				fmt.Printf("Cannot resolve sysmlink %s\n", device.GivenName)
@@ -184,14 +184,14 @@ func spindownDisk(deviceName, command string) {
 
 func logSpinup(ds diskstats.DiskStats, file string) {
 	now := time.Now()
-	text := fmt.Sprintf("date: %s, time: %s, disk: %s, running: %d, stopped: %d\n",
+	text := fmt.Sprintf("date: %s, time: %s, disk: %s, running: %d, stopped: %d",
 		now.Format("2006-01-02"), now.Format("15:04:05"), ds.Name,
 		int(ds.SpinDownAt.Sub(ds.SpinUpAt).Seconds()), int(now.Sub(ds.SpinDownAt).Seconds()))
 	logToFile(file, text)
 }
 
 func logSpinupAfterSleep(name string, file string) {
-	text := fmt.Sprintf("date: %s, time: %s, disk: %s, assuming disk spun up after long sleep\n",
+	text := fmt.Sprintf("date: %s, time: %s, disk: %s, assuming disk spun up after long sleep",
 		now.Format("2006-01-02"), now.Format("15:04:05"), name)
 	logToFile(file, text)
 }
@@ -202,7 +202,7 @@ func logToFile(file string, text string) {
 		if err != nil {
 			log.Fatalf("Cannot open file %s. Error: %s", file, err)
 		}
-		if _, err = cacheFile.WriteString(text); err != nil {
+		if _, err = cacheFile.WriteString(text + "\n"); err != nil {
 			log.Fatalf("Cannot write into file %s. Error: %s", file, err)
 		}
 		err = cacheFile.Close()
