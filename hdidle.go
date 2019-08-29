@@ -105,9 +105,7 @@ func updateState(tmp diskstats.DiskStats, config *Config) {
 		if ds.SpunDown {
 			/* disk was spun down, thus it has just spun up */
 			fmt.Printf("%s spinup\n", ds.Name)
-			if len(config.Defaults.LogFile) > 0 {
-				logSpinup(ds, config.Defaults.LogFile)
-			}
+			logSpinup(ds, config.Defaults.LogFile)
 			previousSnapshots[dsi].SpinUpAt = now
 		}
 		previousSnapshots[dsi].Reads = tmp.Reads
@@ -199,16 +197,18 @@ func logSpinupAfterSleep(name string, file string) {
 }
 
 func logToFile(file string, text string) {
-	cacheFile, err := os.OpenFile(file, os.O_APPEND|os.O_WRONLY, 0600)
-	if err != nil {
-		log.Fatalf("Cannot open file %s. Error: %s", file, err)
-	}
-	if _, err = cacheFile.WriteString(text); err != nil {
-		log.Fatalf("Cannot write into file %s. Error: %s", file, err)
-	}
-	err = cacheFile.Close()
-	if err != nil {
-		log.Fatalf("Cannot close file %s. Error: %s", file, err)
+	if len(file) > 0 {
+		cacheFile, err := os.OpenFile(file, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
+		if err != nil {
+			log.Fatalf("Cannot open file %s. Error: %s", file, err)
+		}
+		if _, err = cacheFile.WriteString(text); err != nil {
+			log.Fatalf("Cannot write into file %s. Error: %s", file, err)
+		}
+		err = cacheFile.Close()
+		if err != nil {
+			log.Fatalf("Cannot close file %s. Error: %s", file, err)
+		}
 	}
 }
 
