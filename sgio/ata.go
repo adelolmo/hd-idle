@@ -27,8 +27,7 @@ func StopAtaDevice(device string) {
 	sendAtaCommand(f, ataOpStandbyNow1)
 	sendAtaCommand(f, ataOpStandbyNow2)
 
-	err = f.Close()
-	if err != nil {
+	if err := f.Close(); err != nil {
 		log.Fatalf("Cannot close file %s. Error: %s", device, err)
 	}
 }
@@ -55,13 +54,11 @@ func sendSgio(f *os.File, inqCmdBlk [sgAta16Len]uint8) {
 		Timeout:        0,
 	}
 
-	err := sgio.SgioSyscall(f, ioHdr)
-	if err != nil {
+	if err := sgio.SgioSyscall(f, ioHdr); err != nil {
 		log.Fatalln(err)
 	}
 
-	err = sgio.CheckSense(ioHdr, &senseBuf)
-	if err != nil {
+	if err := sgio.CheckSense(ioHdr, &senseBuf); err != nil {
 		log.Fatalln(err)
 	}
 }

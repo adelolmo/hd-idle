@@ -13,7 +13,6 @@ func StopScsiDevice(device string) {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	defer f.Close()
 
 	senseBuf := make([]byte, sgio.SENSE_BUF_LEN)
 	inqCmdBlk := []uint8{startStopUnit, 0, 0, 0, 0, 0}
@@ -26,13 +25,15 @@ func StopScsiDevice(device string) {
 		MxSbLen:        sgio.SENSE_BUF_LEN,
 	}
 
-	err = sgio.SgioSyscall(f, ioHdr)
-	if err != nil {
+	if err := sgio.SgioSyscall(f, ioHdr); err != nil {
 		log.Fatalln(err)
 	}
 
-	err = sgio.CheckSense(ioHdr, &senseBuf)
-	if err != nil {
+	if err := sgio.CheckSense(ioHdr, &senseBuf); err != nil {
 		log.Fatalln(err)
+	}
+
+	if err := f.Close(); err != nil {
+		log.Fatalf("Cannot close file %s. Error: %s", device, err)
 	}
 }
