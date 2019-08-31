@@ -27,6 +27,7 @@ BUILD_DIR := obj-$(DEB_HOST_GNU_TYPE)
 
 # Required: Put the url (without http://) of your git repo.
 export DH_GOPKG := github.com/adelolmo/hd-idle
+export GOCACHE := $(GOPATH)/pkg
 
 # Required: Put the name of your git repo below.
 GIT_REPO_NAME := hd-idle
