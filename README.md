@@ -126,12 +126,13 @@ Command line options:
 
 + -l *logfile*            
                         Name of logfile (written only after a disk has spun
-                        up). Please note that this option might cause the
+                        up or spun down). Please note that this option might cause the
                         disk which holds the logfile to spin up just because
-                        another disk had some activity. This option should
-                        not be used on systems with more than one disk
-                        except for tuning purposes. On single-disk systems,
+                        another disk had some activity. On single-disk systems,
                         this option should not cause any additional spinups.
+                        On systems with more than one disk, the disk where the log
+                        is written will be spun up. On raspberry based systems the 
+                        log should be written to the SD card.
 
 Miscellaneous options:
 
