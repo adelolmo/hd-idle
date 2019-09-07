@@ -53,6 +53,7 @@ also be a symlink (e.g. /dev/disk/by-uuid/...)
 .B \-i idle_time
 Idle time in seconds for the currently named disk(s) (-a <name>) or for
 all disks.
+.TP
 .B \-c command_type
 Api call to stop the device. Possible values are "scsi" (default value)
 and "ata".
@@ -69,7 +70,7 @@ Name of logfile (written only after a disk has spun up). Please note that
 this option might cause the disk which holds the logfile to spin up just
 because another disk had some activity. This option should not be used on
 systems with more than one disk except for tuning purposes. On single-disk
-systems, this option should not cause any additional spinups.  
+systems, this option should not cause any additional spinups.
 .TP
 .B \-t disk
 Spin-down the specified disk immediately and exit.
@@ -114,9 +115,9 @@ try to spin down a disk) and default "ata" api command, then sets explicit
 idle times for disks which have the string "sda" or "sdb" in their device name
 and sets "sdb" to use "ata" api command.
 .SH AUTHOR
-hd-idle was written by Chistian Mueller <chris@mumac.de>
-The port to Go was written by Andoni del Olmo <andoni.delolmo@gmail>
+hd-idle was written by Chistian Mueller <chris@mumac.de>. The port to Go was
+written by Andoni del Olmo <andoni.delolmo@gmail>.
 .PP
-This manual page was written by Christian Mueller <chris@mumac.de>,
-for the Debian project (and may be used by others).
-Modified by Andoni del Olmo <andoni.delolmo@gmail.com>
+This manual page was written by Christian Mueller <chris@mumac.de>, for the Debian
+project (and may be used by others). Modified by Andoni del Olmo
+<andoni.delolmo@gmail.com>.
