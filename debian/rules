@@ -80,5 +80,5 @@ override_dh_auto_install:
 	cp $(GIT_REPO_NAME).service debian/$(GIT_REPO_NAME)/lib/systemd/system
 	install -g 0 -o 0 -d debian/$(GIT_REPO_NAME)/usr/share/$(GIT_REPO_NAME)
 	cp $(GIT_REPO_NAME).conf debian/$(GIT_REPO_NAME)/usr/share/$(GIT_REPO_NAME)/configuration
-	install -g 0 -o 0 -d debian/$(GIT_REPO_NAME)/usr/share/man/man1
-	cp $(GIT_REPO_NAME).1 debian/$(GIT_REPO_NAME)/usr/share/man/man1
+	install -g 0 -o 0 -d debian/$(GIT_REPO_NAME)/usr/share/man/man8
+	cp $(GIT_REPO_NAME).8 debian/$(GIT_REPO_NAME)/usr/share/man/man8
