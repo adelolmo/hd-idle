@@ -1,5 +1,6 @@
 [Unit]
-Description=Hard drive idling daemon
+Description=hd-idle - spin down idle hard disks
+Documentation=man:hd-idle(8)
 
 [Service]
 Type=simple
