@@ -1,3 +1,12 @@
+hd-idle (1.7) unstable; urgency=medium
+
+  * Change package section to admin and priority to optional.
+  * Fix man page format error.
+  * Move man page to section 8 (System administration commands and daemons).
+  * Sign package.
+
+ -- Andoni del Olmo <andoni.delolmo@gmail.com>  Sun, 8 Sep 2019 08:47:00 +0200
+
 hd-idle (1.6) unstable; urgency=low
 
   * The parameter "-s" allows to resolve symlinks for disk names also in runtime.
