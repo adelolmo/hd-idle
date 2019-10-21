@@ -1,8 +1,8 @@
 package sgio
 
 import (
+	"fmt"
 	"github.com/benmcclelland/sgio"
-	"log"
 	"os"
 )
 
@@ -18,34 +18,39 @@ const (
 	ataOpStandbyNow2 = 0x94 // Retired in ATA4. Did not coexist with ATAPI.
 )
 
-func StopAtaDevice(device string) {
+func StopAtaDevice(device string) error {
 	f, err := openDevice(device)
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 
-	sendAtaCommand(f, ataOpStandbyNow1)
-	sendAtaCommand(f, ataOpStandbyNow2)
+	if err = sendAtaCommand(f, ataOpStandbyNow1); err != nil {
+		return err
+	}
+	if err = sendAtaCommand(f, ataOpStandbyNow2); err != nil {
+		return err
+	}
 
 	if err := f.Close(); err != nil {
-		log.Fatalf("Cannot close file %s. Error: %s", device, err)
+		return fmt.Errorf("cannot close file %s. Error: %s", device, err)
 	}
+	return nil
 }
 
-func sendAtaCommand(f *os.File, command uint8) {
+func sendAtaCommand(f *os.File, command uint8) error {
 	var cbd [sgAta16Len]uint8
 	cbd[0] = sgAta16
 	cbd[1] = sgAtaProtoNonData
 	cbd[2] = sgCdb2CheckCond
 	cbd[13] = ataUsingLba
 	cbd[14] = command
-	sendSgio(f, cbd)
+	return sendSgio(f, cbd)
 }
 
-func sendSgio(f *os.File, inqCmdBlk [sgAta16Len]uint8) {
+func sendSgio(f *os.File, inqCmdBlk [sgAta16Len]uint8) error {
 	senseBuf := make([]byte, sgio.SENSE_BUF_LEN)
 	ioHdr := &sgio.SgIoHdr{
-		InterfaceID:    int32('S'),
+		InterfaceID:    'S',
 		DxferDirection: SgDxferNone,
 		Cmdp:           &inqCmdBlk[0],
 		CmdLen:         sgAta16Len,
@@ -55,10 +60,11 @@ func sendSgio(f *os.File, inqCmdBlk [sgAta16Len]uint8) {
 	}
 
 	if err := sgio.SgioSyscall(f, ioHdr); err != nil {
-		log.Fatalln(err)
+		return err
 	}
 
 	if err := sgio.CheckSense(ioHdr, &senseBuf); err != nil {
-		log.Fatalln(err)
+		return err
 	}
+	return nil
 }
