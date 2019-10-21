@@ -174,10 +174,14 @@ func spindownDisk(deviceName, command string) {
 	device := fmt.Sprintf("/dev/%s", deviceName)
 	switch command {
 	case SCSI:
-		sgio.StopScsiDevice(device)
+		if err := sgio.StopScsiDevice(device); err != nil {
+			fmt.Printf("cannot spindown scsi disk %s\n. %s", device, err.Error())
+		}
 		return
 	case ATA:
-		sgio.StopAtaDevice(device)
+		if err := sgio.StopAtaDevice(device); err != nil {
+			fmt.Printf("cannot spindown ata disk %s\n. %s", device, err.Error())
+		}
 		return
 	}
 }
