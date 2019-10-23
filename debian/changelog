@@ -1,3 +1,11 @@
+hd-idle (1.8) unstable; urgency=medium
+
+  * Allow usage of symlinks that point to partitions. Like: by-label, by-partlabel,
+    by-partuuid and by-uuid.
+  * Improve error handling when spin down fails.
+
+ -- Andoni del Olmo <andoni.delolmo@gmail.com>  Wed, 23 Oct 2019 21:15:00 +0200
+
 hd-idle (1.7) unstable; urgency=medium
 
   * Change package section to admin and priority to optional.
