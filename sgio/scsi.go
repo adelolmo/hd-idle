@@ -36,4 +36,5 @@ func StopScsiDevice(device string) error {
 	if err := f.Close(); err != nil {
 		return fmt.Errorf("cannot close file %s. Error: %s", device, err)
 	}
+	return nil
 }

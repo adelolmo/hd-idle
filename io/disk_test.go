@@ -40,6 +40,12 @@ func TestRealPath(t *testing.T) {
 			want:          "sdc",
 			symlinkTarget: "/tmp/dev/sdc",
 		},
+		{
+			name:          "symlink to partition by id",
+			args:          args{path: "/tmp/dev/disk/by-label/disk2"},
+			want:          "sdc",
+			symlinkTarget: "/tmp/dev/sdc1",
+		},
 	}
 	for _, tt := range tests {
 		err := os.RemoveAll("/tmp/dev")
@@ -47,6 +53,10 @@ func TestRealPath(t *testing.T) {
 			panic(err)
 		}
 		err = os.MkdirAll("/tmp/dev/disk/by-id", os.ModePerm)
+		if err != nil {
+			panic("cannot create tmp dir")
+		}
+		err = os.MkdirAll("/tmp/dev/disk/by-label", os.ModePerm)
 		if err != nil {
 			panic("cannot create tmp dir")
 		}
