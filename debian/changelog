@@ -1,3 +1,9 @@
+hd-idle (1.9) unstable; urgency=medium
+
+  * Improve log on start up and ATA error reporting.
+
+ -- Andoni del Olmo <andoni.delolmo@gmail.com>  Wed, 11 Mar 2020 10:25:00 +0200
+
 hd-idle (1.8) unstable; urgency=medium
 
   * Allow usage of symlinks that point to partitions. Like: by-label, by-partlabel,

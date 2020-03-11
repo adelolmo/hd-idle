@@ -175,12 +175,12 @@ func spindownDisk(deviceName, command string) {
 	switch command {
 	case SCSI:
 		if err := sgio.StopScsiDevice(device); err != nil {
-			fmt.Printf("cannot spindown scsi disk %s\n. %s", device, err.Error())
+			fmt.Printf("cannot spindown scsi disk %s:\n%s\n", device, err.Error())
 		}
 		return
 	case ATA:
 		if err := sgio.StopAtaDevice(device); err != nil {
-			fmt.Printf("cannot spindown ata disk %s\n. %s", device, err.Error())
+			fmt.Printf("cannot spindown ata disk %s:\n%s\n", device, err.Error())
 		}
 		return
 	}
@@ -217,6 +217,15 @@ func logToFile(file string, text string) {
 }
 
 func (c *Config) String() string {
-	return fmt.Sprintf("symlinkPolicy=%d, defaultIdle=%d, defaultCommand=%s, debug=%t, devices=%v, logFile=%s",
-		c.Defaults.SymlinkPolicy, c.Defaults.Idle, c.Defaults.CommandType, c.Defaults.Debug, c.Devices, c.Defaults.LogFile)
+	var devices string
+	for _, device := range c.Devices {
+		devices += "{" + device.String() + "}"
+	}
+	return fmt.Sprintf("symlinkPolicy=%d, defaultIdle=%d, defaultCommand=%s, debug=%t, logFile=%s, devices=%s",
+		c.Defaults.SymlinkPolicy, c.Defaults.Idle, c.Defaults.CommandType, c.Defaults.Debug, c.Defaults.LogFile, devices)
+}
+
+func (dc *DeviceConf) String() string {
+	return fmt.Sprintf("name=%s, givenName=%s, idle=%d, commandType=%s",
+		dc.Name, dc.GivenName, dc.Idle, dc.CommandType)
 }
