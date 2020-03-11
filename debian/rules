@@ -27,11 +27,11 @@ BUILD_DIR := obj-$(DEB_HOST_GNU_TYPE)
 
 # Required: Put the url (without http://) of your git repo.
 export DH_GOPKG := github.com/adelolmo/hd-idle
-export GOCACHE := $(GOPATH)/pkg
 
 # Required: Put the name of your git repo below.
 GIT_REPO_NAME := hd-idle
 
+export DH_GOLANG_GO_GENERATE := 1
 export PATH := $(CURDIR)/$(BUILD_DIR)/bin:$(PATH)
 
 ##
@@ -41,21 +41,21 @@ export PATH := $(CURDIR)/$(BUILD_DIR)/bin:$(PATH)
 export DH_GOLANG_INSTALL_ALL := 1
 
 %:
-	dh $@ --buildsystem=golang --with=golang
+	mkdir -p /tmp/gocache
+	GO111MODULE=on GOFLAGS=-mod=vendor GOCACHE=/tmp/gocache dh $@ --buildsystem=golang --with=golang
 
 override_dh_clean:
 	rm -f debian/debhelper.log
 	dh_clean
 
 override_dh_auto_build:
-	dh_auto_build -- -ldflags "-s -w"
+	dh_auto_build
 	##
 	# From git-lfs/git-lfs repo:
 	# dh_golang doesn't do anything here in deb 8, and it's needed in both
 	##
 	if [ "$(DEB_HOST_GNU_TYPE)" != "$(DEB_BUILD_GNU_TYPE)" ]; then\
 		cp -rf $(BUILD_DIR)/bin/*/* $(BUILD_DIR)/bin/; \
-		cp -rf $(BUILD_DIR)/pkg/*/* $(BUILD_DIR)/pkg/; \
 	fi
 
 override_dh_strip:
