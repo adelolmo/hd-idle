@@ -182,6 +182,10 @@ for subsequent idle-time settings.
     idle times for disks which have the string `sda` or `sdb` in their device name 
     and sets `sdb` to use `scsi` api command.
 
+## SCSI response not ok
+
+This topic is covered here: [SCSI-response-not-ok](https://github.com/adelolmo/hd-idle/wiki/SCSI-response-not-ok)
+
 ## License
 
 GNU General Public License v3.0, see [LICENSE](https://github.com/adelolmo/hd-idle/blob/master/LICENSE).

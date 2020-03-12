@@ -31,7 +31,6 @@ export DH_GOPKG := github.com/adelolmo/hd-idle
 # Required: Put the name of your git repo below.
 GIT_REPO_NAME := hd-idle
 
-export DH_GOLANG_GO_GENERATE := 1
 export PATH := $(CURDIR)/$(BUILD_DIR)/bin:$(PATH)
 
 ##
