@@ -73,11 +73,11 @@ override_dh_golang:
 	##
 
 override_dh_auto_install:
-	install -g 0 -o 0 -d debian/$(GIT_REPO_NAME)/usr/sbin
+	mkdir -p debian/$(GIT_REPO_NAME)/usr/sbin
 	cp $(BUILD_DIR)/bin/hd-idle debian/$(GIT_REPO_NAME)/usr/sbin
-	install -g 0 -o 0 -d debian/$(GIT_REPO_NAME)/lib/systemd/system
-	cp $(GIT_REPO_NAME).service debian/$(GIT_REPO_NAME)/lib/systemd/system
-	install -g 0 -o 0 -d debian/$(GIT_REPO_NAME)/usr/share/$(GIT_REPO_NAME)
-	cp $(GIT_REPO_NAME).conf debian/$(GIT_REPO_NAME)/usr/share/$(GIT_REPO_NAME)/configuration
-	install -g 0 -o 0 -d debian/$(GIT_REPO_NAME)/usr/share/man/man8
-	cp $(GIT_REPO_NAME).8 debian/$(GIT_REPO_NAME)/usr/share/man/man8
+	#install -g 0 -o 0 -d debian/$(GIT_REPO_NAME)/lib/systemd/system
+	#cp $(GIT_REPO_NAME).service debian/$(GIT_REPO_NAME)/lib/systemd/system
+	mkdir -p debian/$(GIT_REPO_NAME)/usr/share/$(GIT_REPO_NAME)
+	cp debian/$(GIT_REPO_NAME).default debian/$(GIT_REPO_NAME)/usr/share/$(GIT_REPO_NAME)/configuration
+	mkdir -p debian/$(GIT_REPO_NAME)/usr/share/man/man8
+	cp debian/$(GIT_REPO_NAME).8 debian/$(GIT_REPO_NAME)/usr/share/man/man8
