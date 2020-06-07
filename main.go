@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"github.com/adelolmo/hd-idle/io"
 	"github.com/adelolmo/hd-idle/sgio"
-	"github.com/jasonlvhit/gocron"
+	"github.com/go-co-op/gocron"
 	"os"
 	"strconv"
+	"time"
 )
 
 const (
@@ -126,9 +127,9 @@ func main() {
 
 	interval := poolInterval(config.Devices)
 	config.SkewTime = interval * 3
-	gocron.Every(interval).Seconds().Do(ObserveDiskActivity, config)
-	gocron.NextRun()
-	<-gocron.Start()
+	s := gocron.NewScheduler(time.UTC)
+	_, _ = s.Every(interval).Second().Do(ObserveDiskActivity, config)
+	<- s.Start()
 }
 
 func poolInterval(deviceConfs []DeviceConf) uint64 {
