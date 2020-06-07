@@ -194,25 +194,27 @@ func logSpinup(ds diskstats.DiskStats, file string) {
 	logToFile(file, text)
 }
 
-func logSpinupAfterSleep(name string, file string) {
+func logSpinupAfterSleep(name, file string) {
 	text := fmt.Sprintf("date: %s, time: %s, disk: %s, assuming disk spun up after long sleep",
 		now.Format("2006-01-02"), now.Format("15:04:05"), name)
 	logToFile(file, text)
 }
 
-func logToFile(file string, text string) {
-	if len(file) > 0 {
-		cacheFile, err := os.OpenFile(file, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
-		if err != nil {
-			log.Fatalf("Cannot open file %s. Error: %s", file, err)
-		}
-		if _, err = cacheFile.WriteString(text + "\n"); err != nil {
-			log.Fatalf("Cannot write into file %s. Error: %s", file, err)
-		}
-		err = cacheFile.Close()
-		if err != nil {
-			log.Fatalf("Cannot close file %s. Error: %s", file, err)
-		}
+func logToFile(file, text string) {
+	if len(file) == 0 {
+		return
+	}
+
+	cacheFile, err := os.OpenFile(file, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
+	if err != nil {
+		log.Fatalf("Cannot open file %s. Error: %s", file, err)
+	}
+	if _, err = cacheFile.WriteString(text + "\n"); err != nil {
+		log.Fatalf("Cannot write into file %s. Error: %s", file, err)
+	}
+	err = cacheFile.Close()
+	if err != nil {
+		log.Fatalf("Cannot close file %s. Error: %s", file, err)
 	}
 }
 
