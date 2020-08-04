@@ -1,40 +1,32 @@
 package gocron
 
 import (
-	"errors"
+	"fmt"
 	"time"
 )
 
-// Error declarations for gocron
-var (
-	ErrTimeFormat           = errors.New("time format error")
-	ErrParamsNotAdapted     = errors.New("the number of params is not adapted")
-	ErrNotAFunction         = errors.New("only functions can be schedule into the job queue")
-	ErrPeriodNotSpecified   = errors.New("unspecified job period")
-	ErrParameterCannotBeNil = errors.New("nil paramaters cannot be used with reflection")
-)
-
-// Job struct keeping information about job
+// Job struct stores the information necessary to run a Job
 type Job struct {
 	interval          uint64                   // pause interval * unit between runs
-	startsImmediately bool                     // if the job should run upon scheduler start
-	jobFunc           string                   // the job jobFunc to run, func[jobFunc]
 	unit              timeUnit                 // time units, ,e.g. 'minutes', 'hours'...
-	atTime            time.Duration            // optional time at which this job runs
-	err               error                    // error related to job
+	periodDuration    time.Duration            // interval * unit
+	startsImmediately bool                     // if the Job should run upon scheduler start
+	jobFunc           string                   // the Job jobFunc to run, func[jobFunc]
+	atTime            time.Duration            // optional time at which this Job runs
+	err               error                    // error related to Job
 	lastRun           time.Time                // datetime of last run
 	nextRun           time.Time                // datetime of next run
 	startDay          time.Weekday             // Specific day of the week to start on
+	dayOfTheMonth     int                      // Specific day of the month to run the job
 	funcs             map[string]interface{}   // Map for the function task store
 	fparams           map[string][]interface{} // Map for function and  params of function
-	lock              bool                     // lock the job from running at same time form multiple instances
-	tags              []string                 // allow the user to tag jobs with certain labels
-	time              timeHelper               // an instance of timeHelper to interact with the time package
+	lock              bool                     // lock the Job from running at same time form multiple instances
+	tags              []string                 // allow the user to tag Jobs with certain labels
 }
 
-// NewJob creates a new job with the time interval.
+// NewJob creates a new Job with the provided interval
 func NewJob(interval uint64) *Job {
-	th := newTimeHelper()
+	th := newTimeWrapper()
 	return &Job{
 		interval: interval,
 		lastRun:  th.Unix(0, 0),
@@ -43,28 +35,21 @@ func NewJob(interval uint64) *Job {
 		funcs:    make(map[string]interface{}),
 		fparams:  make(map[string][]interface{}),
 		tags:     []string{},
-		time:     th,
 	}
 }
 
-// True if the job should be run now
-func (j *Job) shouldRun() bool {
-	return j.time.Now().Unix() >= j.nextRun.Unix()
-}
-
-//Run the job and immediately reschedule it
+// Run the Job and immediately reschedule it
 func (j *Job) run() {
-	j.lastRun = j.time.Now()
-	go callJobFuncWithParams(j.funcs[j.jobFunc], j.fparams[j.jobFunc])
+	callJobFuncWithParams(j.funcs[j.jobFunc], j.fparams[j.jobFunc])
 }
 
-// Err should be checked to ensure an error didn't occur creating the job
+// Err returns an error if one ocurred while creating the Job
 func (j *Job) Err() error {
 	return j.err
 }
 
-// Tag allows you to add labels to a job
-// they don't impact the functionality of the job.
+// Tag allows you to add arbitrary labels to a Job that do not
+// impact the functionality of the Job
 func (j *Job) Tag(t string, others ...string) {
 	j.tags = append(j.tags, t)
 	for _, tag := range others {
@@ -72,7 +57,7 @@ func (j *Job) Tag(t string, others ...string) {
 	}
 }
 
-// Untag removes a tag from a job
+// Untag removes a tag from a Job
 func (j *Job) Untag(t string) {
 	newTags := []string{}
 	for _, tag := range j.tags {
@@ -84,39 +69,48 @@ func (j *Job) Untag(t string) {
 	j.tags = newTags
 }
 
-// Tags returns the tags attached to the job
+// Tags returns the tags attached to the Job
 func (j *Job) Tags() []string {
 	return j.tags
 }
 
-func (j *Job) periodDuration() (time.Duration, error) {
+func (j *Job) setPeriodDuration() error {
 	interval := time.Duration(j.interval)
-	var periodDuration time.Duration
 
 	switch j.unit {
 	case seconds:
-		periodDuration = interval * time.Second
+		j.periodDuration = interval * time.Second
 	case minutes:
-		periodDuration = interval * time.Minute
+		j.periodDuration = interval * time.Minute
 	case hours:
-		periodDuration = interval * time.Hour
+		j.periodDuration = interval * time.Hour
 	case days:
-		periodDuration = interval * time.Hour * 24
+		j.periodDuration = interval * time.Hour * 24
 	case weeks:
-		periodDuration = interval * time.Hour * 24 * 7
+		j.periodDuration = interval * time.Hour * 24 * 7
+	case months:
+		// periodDuration doesn't apply here
 	default:
-		return 0, ErrPeriodNotSpecified
+		return ErrPeriodNotSpecified
 	}
-	return periodDuration, nil
+	return nil
 }
 
-// NextScheduledTime returns the time of when this job is to run next
-func (j *Job) NextScheduledTime() time.Time {
+// ScheduledTime returns the time of the Job's next scheduled run
+func (j *Job) ScheduledTime() time.Time {
 	return j.nextRun
 }
 
-// GetWeekday returns which day of the week the job will run on
-// This should only be used when .Weekday(...) was called on the job.
-func (j *Job) GetWeekday() time.Weekday {
-	return j.startDay
+// ScheduledAtTime returns the specific time of day the Job will run at
+func (j *Job) ScheduledAtTime() string {
+	return fmt.Sprintf("%d:%d", j.atTime/time.Hour, (j.atTime%time.Hour)/time.Minute)
+}
+
+// Weekday returns which day of the week the Job will run on and
+// will return an error if the Job is not scheduled weekly
+func (j *Job) Weekday() (time.Weekday, error) {
+	if j.unit == weeks {
+		return j.startDay, nil
+	}
+	return time.Sunday, ErrNotScheduledWeekday
 }
