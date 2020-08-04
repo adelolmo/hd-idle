@@ -6,7 +6,7 @@ goCron is a Golang job scheduling package which lets you run Go functions period
 
 goCron is a Golang implementation of Ruby module [clockwork](https://github.com/tomykaira/clockwork) and Python job scheduling package [schedule](https://github.com/dbader/schedule).
 
-See also this two great articles:
+See also these two great articles:
 
 - [Rethinking Cron](http://adam.herokuapp.com/past/2010/4/13/rethinking_cron/)
 - [Replace Cron with Clockwork](http://adam.herokuapp.com/past/2010/6/30/replace_cron_with_clockwork/)
@@ -34,9 +34,13 @@ func taskWithParams(a int, b string) {
 }
 
 func main() {
+    // defines a new scheduler that schedules and runs jobs
     s1 := gocron.NewScheduler(time.UTC)
+
     s1.Every(3).Seconds().Do(task)
-    <- s1.Start() // starts running (blocks current thread)
+
+    // scheduler starts running jobs and current thread continues to execute
+    s1.StartAsync()
 
     // Do jobs without params
     s2 := gocron.NewScheduler(time.UTC)
@@ -50,9 +54,23 @@ func main() {
     s2.Every(2).Days().Do(task)
     s2.Every(1).Week().Do(task)
     s2.Every(2).Weeks().Do(task)
+    s2.Every(1).Month(time.Now().Day()).Do(task)
+    s2.Every(2).Months(15).Do(task)
 
     // Do jobs with params
     s2.Every(1).Second().Do(taskWithParams, 1, "hello")
+
+    // Do Jobs with tags
+    // initialize tag
+    tag1 := []string{"tag1"}
+    tag2 := []string{"tag2"}
+
+
+    s2.Every(1).Week().SetTag(tag1).Do(task)
+    s2.Every(1).Week().SetTag(tag2).Do(task)
+
+    // Removing Job Based on Tag
+    s2.RemoveJobByTag("tag1")
 
     // Do jobs on specific weekday
     s2.Every(1).Monday().Do(task)
@@ -82,8 +100,13 @@ func main() {
     // Clear all scheduled jobs
     s2.Clear()
 
-    // Start all the pending jobs
-    <- s2.Start()
+    // stop our first scheduler (it still exists but doesn't run anymore)
+    s1.Stop() 
+
+    // executes the scheduler and blocks current thread
+    s2.StartBlocking()
+
+    // this line is never reached
 }
 ```
 
@@ -106,3 +129,5 @@ Looking to contribute? Try to follow these guidelines:
     * Reporting issues
     * Suggesting new features or enhancements
     * Improving/fixing documentation
+---
+[Jetbrains](https://www.jetbrains.com/?from=gocron) supports this project with GoLand licenses. We appreciate their support for free and open source software!

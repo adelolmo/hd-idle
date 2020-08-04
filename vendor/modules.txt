@@ -1,4 +1,4 @@
 # github.com/benmcclelland/sgio v0.0.0-20180629175614-f710aebf64c1
 github.com/benmcclelland/sgio
-# github.com/go-co-op/gocron v0.1.0
+# github.com/go-co-op/gocron v0.3.0
 github.com/go-co-op/gocron

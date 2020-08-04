@@ -2,22 +2,23 @@ package gocron
 
 import "time"
 
-type timeHelper interface {
-	Now() time.Time
+type timeWrapper interface {
+	Now(*time.Location) time.Time
 	Unix(int64, int64) time.Time
 	Sleep(time.Duration)
 	Date(int, time.Month, int, int, int, int, int, *time.Location) time.Time
 	NewTicker(time.Duration) *time.Ticker
 }
 
-func newTimeHelper() timeHelper {
+func newTimeWrapper() timeWrapper {
 	return &trueTime{}
 }
 
 type trueTime struct{}
 
-func (t *trueTime) Now() time.Time {
-	return time.Now()
+func (t *trueTime) Now(location *time.Location) time.Time {
+	n := time.Now().In(location)
+	return t.Date(n.Year(), n.Month(), n.Day(), n.Hour(), n.Minute(), n.Second(), 0, location)
 }
 
 func (t *trueTime) Unix(sec int64, nsec int64) time.Time {
