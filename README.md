@@ -1,37 +1,38 @@
 # hd-idle
 
-This is a port to Go of Christian Mueller's [hd-idle](http://hd-idle.sf.net)
+Reimplementation of _Christian Mueller's_ [hd-idle](http://hd-idle.sf.net) with some extra features.
 
-`hd-idle` is a utility program for spinning-down external disks after a period
-of idle time. Since most external IDE disk enclosures don't support setting
-the IDE idle timer, a program like `hd-idle` is required to spin down idle
-disks automatically.
+`hd-idle` is a utility program for spinning-down external disks after a period of idle time. 
+Since most external IDE disk enclosures don't support setting the IDE idle timer, 
+a program like `hd-idle` is required to spin down idle disks automatically.
 
-A word of caution: hard disks don't like spinning up too often. Laptop disks
-are more robust in this respect than desktop disks but if you set your disks
-to spin down after a few seconds you may damage the disk over time due to the
-stress the spin-up causes on the spindle motor and bearings. It seems that
-manufacturers recommend a minimum idle time of 3-5 minutes, the default in
-`hd-idle` is 10 minutes.
+**Index**
+* [Extra features](#extra-features)
+  * [Support ATA commands](#support-ata-commands)
+  * [Monitor the skew between monitoring cycles](#monitor-the-skew-between-monitoring-cycles)
+  * [Resolve symlinks in runtime](#resolve-symlinks-in-runtime)
+  * [Log disk spin up](#log-disk-spin-up)
+* [Install](#Install)
+  * [Precompiled binaries](#precompiled-binaries)
+  * [Build from source](#build-from-source)
+* [Run hd-idle](#run-hd-idle)
+* [Configuration](#Configuration)
+* [Understand the logs](#understand-the-logs)
+  * [Standard log](#standard-log)
+  * [Log file](#log-file)
+* [Warning on spinning down disks](#warning-on-spinning-down-disks)
+* [Troubleshot](#Troubleshot)
+  * [SCSI response not ok](#scsi-response-not-ok)
 
-One more word of caution: `hd-idle` will spin down any disk accessible via the
-`SCSI` layer (USB, IEEE1394, ...) but it will NOT work with real `SCSI` disks
-because they don't spin up automatically. Thus it's not called scsi-idle and
-I don't recommend using it on a real `SCSI` system unless you have a kernel
-patch that automatically starts the `SCSI` disks after receiving a sense buffer
-indicating the disk has been stopped. Without such a patch, real `SCSI` disks
-won't start again and you can as well pull the plug.
+## Extra features
 
-You have been warned...
+List of extra features compared to the original `hd-idle`:
+ 
+### Support ATA commands
 
-## Background
-
-The motivation to port `hd-idle` to Go comes directly from my lack of knowledge in C
-and the need to use `ATA` api to set devices to stop.
-
-The original `hd-idle` written by Christian Mueller relies on the `SCSI` api to work.
-When listing the drives by id, disk starting with `usb` will stop using the original 
-implementation, but disk starting with `ATA` will not.
+The implementation of `hd-idle` written by _Christian Mueller_ relies on the `SCSI` api to work.
+When listing the drives by id, disks starting with `usb` stop using the original implementation, 
+but disk starting with `ata` do not.
 
     $ ls /dev/disk/by-id/
     
@@ -39,20 +40,32 @@ implementation, but disk starting with `ATA` will not.
     ata-WDC_WD50EZRX-
     usb-WD_My_Book_1140_
     
-[hdparm](https://en.wikipedia.org/wiki/Hdparm) on the other hand was able to stop always the three drives without any problems.
-It uses `ATA` api calls to do the job. So my idea was to replicate `hdparm`'s api call 
-and add it to `hd-idle` itself.
+[hdparm](https://en.wikipedia.org/wiki/Hdparm) on the other hand stops always the drives without any problems.
+It uses `ATA` api calls to set disk on standby. `hd-idle` comes with `ATA` commands support to replicate `hdparm`'s api calls.
+
+### Monitor the skew between monitoring cycles
+
+Identify if the sleep took longer than expected and reset the spun down flag if it waited too long for the main loop sleep. 
+This should capture suspend events as well as excessive machine load.
+
+### Resolve symlinks in runtime
+
+`hd-idle` can resolve disk symlinks also in runtime. Disks added after application's start won't be hidden. 
+
+### Log disk spin up
+
+Show in standard output when disks spin up. 
 
 ## Install
 
-There are various ways of installing `hd-idle`
+There are various ways of installing `hd-idle`:
 
 ### Precompiled binaries
 
 Precompiled binaries for released versions are available in the 
 [*releases*](https://github.com/adelolmo/hd-idle/releases) section.
 
-### Building from source
+### Build from source
 
 To build `hd-idle` from the source code yourself you need to have a working
 Go environment with [version 1.12 or greater installed](http://golang.org/doc/install).
@@ -78,7 +91,7 @@ Then install the package:
 
     # dpkg -i ../hd-idle*.deb
     
-## Running hd-idle
+## Run hd-idle
 
 In order to run `hd-idle`, type: 
 
@@ -100,6 +113,8 @@ Please note that `hd-idle` uses */proc/diskstats* to read disk statistics. If
 this file is not present, `hd-idle` won't work.
 
 In case of problems, use the debug option *-d* to get further information.
+
+## Configuration
 
 Command line options:
 
@@ -182,9 +197,86 @@ for subsequent idle-time settings.
     idle times for disks which have the string `sda` or `sdb` in their device name 
     and sets `sdb` to use `scsi` api command.
 
+## Understand the logs
+
+By default `hd-idle` only logs into the standard output. You can find them in the syslog if the application starts via service.
+
+If you set the log file (`-l` flag) then the application writes extra details on it. (Check the [Configuration](#Configuration) section).
+
+### Standard log
+
+The standard log output registers two kinds of events:
+
+* disk spin up
+* disk spin down
+
+```
+Aug  8 00:14:55 enterprise hd-idle[9958]: sda spindown
+Aug  8 00:14:55 enterprise hd-idle[9958]: sdb spindown
+Aug  8 00:14:56 enterprise hd-idle[9958]: sdc spindown
+Aug  8 00:17:55 enterprise hd-idle[9958]: sdb spinup
+Aug  8 00:28:55 enterprise hd-idle[9958]: sdb spindown
+```
+
+### Log file
+
+You can enable the log file with the flag `-l` follow by the log path. (Check the [Configuration](#Configuration) section).
+
+This is the kind of entry shown in the log file:
+
+```
+date: 2020-07-29, time: 07:59:57, disk: sdc, running: 601, stopped: 76654
+```
+
+Explanation:
+* `date` and `time` when the disk spins up.
+* `disk` involved.
+* `running` seconds the device was running before it spun up the last time.
+* `stopped` seconds since last spin down. This is the time the disk was down before spinning up.
+
+A bit more on `running` explained with an example:
+
+| timestamp | current disk spin | event | running | stopped |
+| :-------------: | :----------: | :-----------: | :-----------: | :-----------: |
+| 5:00 | down | disk activity | ? | ? |
+| 6:00 | up | go to sleep | - | - |
+| 9:00 | down | disk activity | 6:00 - 5:00 = 1h (3600s) | 9:00 - 6:00 = 3h (10800s) |
+
+Explanation:
+
+At 5:00 the disk is on standby and hd-idle detects disk activity.
+
+At 6:00 the disk is active and hd-idle determines inactivity of the disk and spins it down.
+
+At 9:00 the disk is on standby and hd-idle detects disk activity. It writes on the log file 1h of previous disk spin up and 3h of standby.   
+
+
+## Warning on spinning down disks
+
+A word of caution: hard disks don't like spinning up too often. Laptop disks
+are more robust in this respect than desktop disks but if you set your disks
+to spin down after a few seconds you may damage the disk over time due to the
+stress the spin-up causes on the spindle motor and bearings. It seems that
+manufacturers recommend a minimum idle time of 3-5 minutes, the default in
+`hd-idle` is 10 minutes.
+
+One more word of caution: `hd-idle` will spin down any disk accessible via the
+`SCSI` layer (USB, IEEE1394, ...) but it will NOT work with real `SCSI` disks
+because they don't spin up automatically. Thus it's not called scsi-idle and
+I don't recommend using it on a real `SCSI` system unless you have a kernel
+patch that automatically starts the `SCSI` disks after receiving a sense buffer
+indicating the disk has been stopped. Without such a patch, real `SCSI` disks
+won't start again and you can as well pull the plug.
+
+You have been warned...
+
+# Troubleshot
+
+This section covers some usual issues that user's face while using `hd-idle`.
+
 ## SCSI response not ok
 
-This topic is covered here: [SCSI-response-not-ok](https://github.com/adelolmo/hd-idle/wiki/SCSI-response-not-ok)
+You can find information about the issue here: [SCSI-response-not-ok](https://github.com/adelolmo/hd-idle/wiki/SCSI-response-not-ok)
 
 ## License
 
