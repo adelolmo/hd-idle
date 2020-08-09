@@ -1,3 +1,30 @@
+hd-idle (1.10) unstable; urgency=medium
+
+  [ andoni ]
+  * update readme with entry to response not ok error
+
+  [ Andoni del Olmo ]
+  * move debian files to debian dir
+  * simplify rules and delete config handle system
+
+  [ adelolmo ]
+  * readme - redo with log explanation
+
+  [ Andoni del Olmo ]
+  * check sectors read/write to determine disk activity
+
+ -- Andoni del Olmo <andoni.delolmo@gmail.com>  Sun, 09 Aug 2020 10:29:32 +0200
+
+hd-idle (1.10) unstable; urgency=medium
+
+  * Check sectors read/write to determine disk activity
+  * Package. Move debian files to debian dir
+  * Package. Simplify rules and delete config handle system
+  * Update readme. Explain logs
+  * Update readme. Entry to response not ok error
+
+ -- Andoni del Olmo <andoni.delolmo@gmail.com>  Sun, 09 Aug 2020 10:26:32 +0200
+
 hd-idle (1.9) unstable; urgency=medium
 
   * Improve log on start up and ATA error reporting.
