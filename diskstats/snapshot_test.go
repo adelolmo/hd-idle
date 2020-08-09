@@ -27,9 +27,9 @@ func TestTakeSnapshot(t *testing.T) {
 	stats := ReadSnapshot(strings.NewReader(s))
 
 	expected := []DiskStats{
-		{Name: "sda", Reads: 321553, Writes: 50820},
-		{Name: "sdc", Reads: 52147, Writes: 28092},
-		{Name: "sdb", Reads: 5650742, Writes: 1728864},
+		{Name: "sda", Reads: 37537568, Writes: 10439592},
+		{Name: "sdc", Reads: 6494584, Writes: 6370936},
+		{Name: "sdb", Reads: 727476416, Writes: 404215912},
 	}
 
 	if len(expected) != len(stats) {
