@@ -3,12 +3,14 @@ Section: admin
 Priority: optional
 Maintainer: Andoni del Olmo <andoni.delolmo@gmail.com>
 Build-Depends: debhelper (>=9), golang-go:native (>= 1.3.3), dh-golang
-Standards-Version: 3.9.4
+Standards-Version: 4.3.0
+Vcs-Browser: https://github.com/adelolmo/hd-idle
+Vcs-Git: https://github.com/adelolmo/hd-idle.git
 Homepage: https://github.com/adelolmo/hd-idle
 
 Package: hd-idle
 Architecture: any
-Description: Spin down idle [USB] hard disks
+Description: Spin down idle hard disks
  hd-idle is a utility program for spinning-down external disks after a period
  of idle time. Since most external IDE disk enclosures don't support setting
  the IDE idle timer, a program like hd-idle is required to spin down idle disks
@@ -20,11 +22,3 @@ Description: Spin down idle [USB] hard disks
  stress the spin-up causes on the spindle motor and bearings. It seems that
  manufacturers recommend a minimum idle time of 3-5 minutes, the default in
  hd-idle is 10 minutes.
- .
- One more word of caution: hd-idle will spin down any disk accessible via the
- SCSI layer (USB, IEEE1394, ...) but it will not work with real SCSI disks
- because they don't spin up automatically. Thus it's not called scsi-idle and
- I don't recommend using it on a real SCSI system unless you have a kernel
- patch that automatically starts the SCSI disks after receiving a sense buffer
- indicating the disk has been stopped. Without such a patch, real SCSI disks
- won't start again and you can as well pull the plug.
