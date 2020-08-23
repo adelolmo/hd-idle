@@ -5,4 +5,8 @@ Source: https://github.com/adelolmo/hd-idle
 Files: *
 Copyright: 2018 Andoni del Olmo <andoni.delolmo@gmail.com>
 Author: Andoni del Olmo <andoni.delolmo@gmail.com>
-License: GPL-3+
+License: GPL-3
+
+Files: debian/hd-idle.8 debian/hd-idle.default debian/control
+Copyright: 2007 Christian Mueller <cm1@mumac.de>
+License: GPL-3
