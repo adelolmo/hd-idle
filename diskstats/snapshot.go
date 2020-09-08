@@ -74,7 +74,7 @@ const (
 
 type DiskStats struct {
 	Name        string
-	IdleTime    int
+	IdleTime    time.Duration
 	CommandType string
 	Reads       int
 	Writes      int
