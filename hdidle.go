@@ -22,6 +22,7 @@ import (
 	"github.com/adelolmo/hd-idle/io"
 	"github.com/adelolmo/hd-idle/sgio"
 	"log"
+	"math"
 	"os"
 	"time"
 )
@@ -33,7 +34,7 @@ const (
 )
 
 type DefaultConf struct {
-	Idle          int
+	Idle          time.Duration
 	CommandType   string
 	Debug         bool
 	LogFile       string
@@ -43,14 +44,14 @@ type DefaultConf struct {
 type DeviceConf struct {
 	Name        string
 	GivenName   string
-	Idle        int
+	Idle        time.Duration
 	CommandType string
 }
 
 type Config struct {
 	Devices  []DeviceConf
 	Defaults DefaultConf
-	SkewTime uint64
+	SkewTime time.Duration
 }
 
 var previousSnapshots []diskstats.DiskStats
@@ -95,7 +96,7 @@ func updateState(tmp diskstats.DiskStats, config *Config) {
 		return
 	}
 
-	if uint64(now.Sub(lastNow).Seconds()) > config.SkewTime {
+	if now.Sub(lastNow) > config.SkewTime {
 		/* we slept too long, assume a suspend event and disks may be spun up */
 		/* reset spin status and timers */
 		previousSnapshots[dsi].SpinUpAt = now
@@ -108,7 +109,7 @@ func updateState(tmp diskstats.DiskStats, config *Config) {
 	if ds.Writes == tmp.Writes && ds.Reads == tmp.Reads {
 		if !ds.SpunDown {
 			/* no activity on this disk and still running */
-			idleDuration := int(now.Sub(ds.LastIoAt).Seconds())
+			idleDuration := now.Sub(ds.LastIoAt)
 			if ds.IdleTime != 0 && idleDuration > ds.IdleTime {
 				spindownDisk(ds.Name, ds.CommandType)
 				previousSnapshots[dsi].SpinDownAt = now
@@ -132,12 +133,12 @@ func updateState(tmp diskstats.DiskStats, config *Config) {
 
 	if config.Defaults.Debug {
 		ds = previousSnapshots[dsi]
-		idleDuration := int(now.Sub(ds.LastIoAt).Seconds())
+		idleDuration := now.Sub(ds.LastIoAt)
 		fmt.Printf("disk=%s command=%s spunDown=%t "+
-			"reads=%d writes=%d idleTime=%d idleDuration=%d "+
+			"reads=%d writes=%d idleTime=%v idleDuration=%v "+
 			"spindown=%s spinup=%s lastIO=%s\n",
 			ds.Name, ds.CommandType, ds.SpunDown,
-			ds.Reads, ds.Writes, ds.IdleTime, idleDuration,
+			ds.Reads, ds.Writes, ds.IdleTime.Seconds(), math.RoundToEven(idleDuration.Seconds()),
 			ds.SpinDownAt.Format(dateFormat), ds.SpinUpAt.Format(dateFormat), ds.LastIoAt.Format(dateFormat))
 	}
 }
@@ -239,11 +240,11 @@ func (c *Config) String() string {
 	for _, device := range c.Devices {
 		devices += "{" + device.String() + "}"
 	}
-	return fmt.Sprintf("symlinkPolicy=%d, defaultIdle=%d, defaultCommand=%s, debug=%t, logFile=%s, devices=%s",
-		c.Defaults.SymlinkPolicy, c.Defaults.Idle, c.Defaults.CommandType, c.Defaults.Debug, c.Defaults.LogFile, devices)
+	return fmt.Sprintf("symlinkPolicy=%d, defaultIdle=%v, defaultCommand=%s, debug=%t, logFile=%s, devices=%s",
+		c.Defaults.SymlinkPolicy, c.Defaults.Idle.Seconds(), c.Defaults.CommandType, c.Defaults.Debug, c.Defaults.LogFile, devices)
 }
 
 func (dc *DeviceConf) String() string {
-	return fmt.Sprintf("name=%s, givenName=%s, idle=%d, commandType=%s",
-		dc.Name, dc.GivenName, dc.Idle, dc.CommandType)
+	return fmt.Sprintf("name=%s, givenName=%s, idle=%v, commandType=%s",
+		dc.Name, dc.GivenName, dc.Idle.Seconds(), dc.CommandType)
 }

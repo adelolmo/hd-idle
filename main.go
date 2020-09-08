@@ -20,14 +20,13 @@ import (
 	"fmt"
 	"github.com/adelolmo/hd-idle/io"
 	"github.com/adelolmo/hd-idle/sgio"
-	"github.com/go-co-op/gocron"
 	"os"
 	"strconv"
 	"time"
 )
 
 const (
-	defaultIdleTime     = 600
+	defaultIdleTime     = 600 * time.Second
 	symlinkResolveOnce  = 0
 	symlinkResolveRetry = 1
 )
@@ -88,7 +87,6 @@ func main() {
 				deviceRealPath = ""
 				fmt.Printf("Unable to resolve symlink: %s\n", name)
 			}
-			//println("name: " + deviceRealPath + " givenName: " + name)
 			deviceConf = &DeviceConf{
 				Name:        deviceRealPath,
 				GivenName:   name,
@@ -104,10 +102,10 @@ func main() {
 				os.Exit(1)
 			}
 			if deviceConf == nil {
-				config.Defaults.Idle = idle
+				config.Defaults.Idle = time.Duration(idle) * time.Second
 				break
 			}
-			deviceConf.Idle = idle
+			deviceConf.Idle = time.Duration(idle) * time.Second
 
 		case "-c":
 			command := os.Args[index+2]
@@ -143,27 +141,27 @@ func main() {
 
 	interval := poolInterval(config.Devices)
 	config.SkewTime = interval * 3
-	s := gocron.NewScheduler(time.UTC)
-	_, _ = s.Every(interval).Second().Do(ObserveDiskActivity, config)
-	<- s.Start()
+	for {
+		ObserveDiskActivity(config)
+		time.Sleep(interval)
+	}
 }
 
-func poolInterval(deviceConfs []DeviceConf) uint64 {
-	var interval = ^uint64(0)
-
+func poolInterval(deviceConfs []DeviceConf) time.Duration {
 	if len(deviceConfs) == 0 {
 		return defaultIdleTime / 10
 	}
 
+	interval := defaultIdleTime
 	for _, dev := range deviceConfs {
-		if uint64(dev.Idle) < interval {
-			interval = uint64(dev.Idle)
+		if dev.Idle < interval {
+			interval = dev.Idle
 		}
 	}
 
 	sleepTime := interval / 10
 	if sleepTime == 0 {
-		return 1
+		return time.Second
 	}
 	return sleepTime
 }
