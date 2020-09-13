@@ -78,8 +78,6 @@ binaries into your `GOPATH`:
 
 On Debian you can also clone the repository yourself and build using `dpkg-buildpackage`.
 
-    $ mkdir -p $GOPATH/src/github.com/adelolmo
-    $ cd $GOPATH/src/github.com/adelolmo
     $ git clone https://github.com/adelolmo/hd-idle.git
     $ cd hd-idle
     $ dpkg-buildpackage -a armhf -us -uc -b
