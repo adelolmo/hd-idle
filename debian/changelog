@@ -1,19 +1,13 @@
-hd-idle (1.10) unstable; urgency=medium
+hd-idle (1.11) unstable; urgency=medium
 
-  [ andoni ]
-  * update readme with entry to response not ok error
+  * Ignore sense response data for ata command to prevent error on arm64.
+  * Allow set command type in combination with -t option.
+  * Remove go-co-op dependency.
+  * Clean control and man page.
+  * Add copyright.
+  * Update readme. No need for GOPATH anymore.
 
-  [ Andoni del Olmo ]
-  * move debian files to debian dir
-  * simplify rules and delete config handle system
-
-  [ adelolmo ]
-  * readme - redo with log explanation
-
-  [ Andoni del Olmo ]
-  * check sectors read/write to determine disk activity
-
- -- Andoni del Olmo <andoni.delolmo@gmail.com>  Sun, 09 Aug 2020 10:29:32 +0200
+ -- Andoni del Olmo <andoni.delolmo@gmail.com>  Sat, 31 Oct 2020 21:43:04 +0100
 
 hd-idle (1.10) unstable; urgency=medium
 
