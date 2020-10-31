@@ -65,7 +65,10 @@ systems with more than one disk except for tuning purposes. On single-disk
 systems, this option should not cause any additional spinups.
 .TP
 .B \-t disk
-Spin-down the specified disk immediately and exit.
+Spin-down the specified disk immediately and exit. It can be used in combination
+with
+.B \-c
+to specify the command type.
 .TP
 .B \-d
 Debug mode. It will print debugging info to stdout/stderr (/var/log/syslog

@@ -111,7 +111,10 @@ func updateState(tmp diskstats.DiskStats, config *Config) {
 			/* no activity on this disk and still running */
 			idleDuration := now.Sub(ds.LastIoAt)
 			if ds.IdleTime != 0 && idleDuration > ds.IdleTime {
-				spindownDisk(ds.Name, ds.CommandType)
+				device := fmt.Sprintf("/dev/%s", ds.Name)
+				if err := spindownDisk(device, ds.CommandType); err != nil {
+					fmt.Println(err.Error())
+				}
 				previousSnapshots[dsi].SpinDownAt = now
 				previousSnapshots[dsi].SpunDown = true
 			}
@@ -186,21 +189,21 @@ func deviceConfig(diskName string, config *Config) *DeviceConf {
 	}
 }
 
-func spindownDisk(deviceName, command string) {
-	fmt.Printf("%s spindown\n", deviceName)
-	device := fmt.Sprintf("/dev/%s", deviceName)
+func spindownDisk(device, command string) error {
+	fmt.Printf("%s spindown\n", device)
 	switch command {
 	case SCSI:
 		if err := sgio.StopScsiDevice(device); err != nil {
-			fmt.Printf("cannot spindown scsi disk %s:\n%s\n", device, err.Error())
+			return fmt.Errorf("cannot spindown scsi disk %s:\n%s\n", device, err.Error())
 		}
-		return
+		return nil
 	case ATA:
 		if err := sgio.StopAtaDevice(device); err != nil {
-			fmt.Printf("cannot spindown ata disk %s:\n%s\n", device, err.Error())
+			return fmt.Errorf("cannot spindown ata disk %s:\n%s\n", device, err.Error())
 		}
-		return
+		return nil
 	}
+	return nil
 }
 
 func logSpinup(ds diskstats.DiskStats, file string) {

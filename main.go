@@ -19,7 +19,6 @@ package main
 import (
 	"fmt"
 	"github.com/adelolmo/hd-idle/io"
-	"github.com/adelolmo/hd-idle/sgio"
 	"os"
 	"strconv"
 	"time"
@@ -38,6 +37,8 @@ func main() {
 		os.Exit(0)
 	}
 
+	singleDiskMode := false
+	var disk string
 	defaultConf := DefaultConf{
 		Idle:          defaultIdleTime,
 		CommandType:   SCSI,
@@ -57,12 +58,13 @@ func main() {
 				fmt.Println("Missing disk argument. Must be a device (e.g. sda)")
 				os.Exit(1)
 			}
-			disk := os.Args[index+2]
-			if err := sgio.StopScsiDevice(disk); err != nil {
-				fmt.Printf("cannot spindown scsi disk %s\n. %s", disk, err.Error())
-				os.Exit(1)
-			}
-			os.Exit(0)
+			singleDiskMode = true
+			disk = os.Args[index+2]
+			/*			if err := sgio.StopScsiDevice(disk); err != nil {
+							fmt.Printf("cannot spindown scsi disk %s\n. %s", disk, err.Error())
+							os.Exit(1)
+						}
+						os.Exit(0)*/
 
 		case "-s":
 			s := os.Args[index+2]
@@ -132,6 +134,14 @@ func main() {
 				"[-c <command_type>] [-l <logfile>] [-d] [-h]")
 			os.Exit(0)
 		}
+	}
+
+	if singleDiskMode {
+		if err := spindownDisk(disk, config.Defaults.CommandType); err != nil {
+			fmt.Println(err.Error())
+			os.Exit(1)
+		}
+		os.Exit(0)
 	}
 
 	if deviceConf != nil {
