@@ -60,11 +60,6 @@ func main() {
 			}
 			singleDiskMode = true
 			disk = os.Args[index+2]
-			/*			if err := sgio.StopScsiDevice(disk); err != nil {
-							fmt.Printf("cannot spindown scsi disk %s\n. %s", disk, err.Error())
-							os.Exit(1)
-						}
-						os.Exit(0)*/
 
 		case "-s":
 			s := os.Args[index+2]

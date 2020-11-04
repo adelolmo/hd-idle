@@ -68,7 +68,7 @@ func sendSgio(f *os.File, inqCmdBlk [sgAta16Len]uint8) error {
 		DxferDirection: SgDxferNone,        //  4 	4
 		CmdLen:         sgAta16Len,         //  8	1
 		MxSbLen:        sgio.SENSE_BUF_LEN, //  9	1
-		Cmdp:           &inqCmdBlk[0],      // 24   8
+		Cmdp:           &inqCmdBlk[0],      // 24	8
 		Sbp:            &senseBuf[0],       // 32	8
 		Timeout:        0,                  // 40	4
 	}
