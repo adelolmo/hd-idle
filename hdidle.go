@@ -111,6 +111,7 @@ func updateState(tmp diskstats.DiskStats, config *Config) {
 			/* no activity on this disk and still running */
 			idleDuration := now.Sub(ds.LastIoAt)
 			if ds.IdleTime != 0 && idleDuration > ds.IdleTime {
+				fmt.Printf("%s spindown\n", ds.Name)
 				device := fmt.Sprintf("/dev/%s", ds.Name)
 				if err := spindownDisk(device, ds.CommandType); err != nil {
 					fmt.Println(err.Error())
@@ -190,7 +191,6 @@ func deviceConfig(diskName string, config *Config) *DeviceConf {
 }
 
 func spindownDisk(device, command string) error {
-	fmt.Printf("%s spindown\n", device)
 	switch command {
 	case SCSI:
 		if err := sgio.StopScsiDevice(device); err != nil {
