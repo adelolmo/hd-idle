@@ -124,7 +124,7 @@ func main() {
 		case "-d":
 			config.Defaults.Debug = true
 
-		case "h":
+		case "-h":
 			fmt.Println("usage: hd-idle [-t <disk>] [-s <symlink_policy>] [-a <name>] [-i <idle_time>] " +
 				"[-c <command_type>] [-l <logfile>] [-d] [-h]")
 			os.Exit(0)
