@@ -51,25 +51,35 @@ func main() {
 	}
 	var deviceConf *DeviceConf
 
+	if len(os.Args) == 0 {
+		usage()
+		os.Exit(1)
+	}
+
 	for index, arg := range os.Args[1:] {
 		switch arg {
 		case "-t":
-			if len(os.Args) < 3 {
-				fmt.Println("Missing disk argument. Must be a device (e.g. sda)")
+			var err error
+			disk, err = argument(index)
+			if err != nil {
+				fmt.Println("Missing disk argument after -t. Must be a device (e.g. -t sda).")
 				os.Exit(1)
 			}
 			singleDiskMode = true
-			disk = os.Args[index+2]
 
 		case "-s":
-			s := os.Args[index+2]
+			s, err := argument(index)
+			if err != nil {
+				fmt.Println("Missing symlink_policy. Must be 0 or 1.")
+				os.Exit(1)
+			}
 			switch s {
 			case "0":
 				config.Defaults.SymlinkPolicy = symlinkResolveOnce
 			case "1":
 				config.Defaults.SymlinkPolicy = symlinkResolveRetry
 			default:
-				fmt.Printf("Wrong symlink_policy -s %s. Must be 0 or 1\n", s)
+				fmt.Printf("Wrong symlink_policy -s %s. Must be 0 or 1.\n", s)
 				os.Exit(1)
 			}
 
@@ -78,7 +88,12 @@ func main() {
 				config.Devices = append(config.Devices, *deviceConf)
 			}
 
-			name := os.Args[index+2]
+			name, err := argument(index)
+			if err != nil {
+				fmt.Println("Missing disk argument after -a. Must be a device (e.g. -a sda).")
+				os.Exit(1)
+			}
+
 			deviceRealPath, err := io.RealPath(name)
 			if err != nil {
 				deviceRealPath = ""
@@ -92,10 +107,14 @@ func main() {
 			}
 
 		case "-i":
-			s := os.Args[index+2]
+			s, err := argument(index)
+			if err != nil {
+				fmt.Println("Missing idle_time after -i. Must be a number.")
+				os.Exit(1)
+			}
 			idle, err := strconv.Atoi(s)
 			if err != nil {
-				fmt.Printf("Wrong idle_time -i %d. Must be a number", idle)
+				fmt.Printf("Wrong idle_time -i %d. Must be a number.", idle)
 				os.Exit(1)
 			}
 			if deviceConf == nil {
@@ -105,7 +124,11 @@ func main() {
 			deviceConf.Idle = time.Duration(idle) * time.Second
 
 		case "-c":
-			command := os.Args[index+2]
+			command, err := argument(index)
+			if err != nil {
+				fmt.Println("Missing command_type after -c. Must be one of: scsi, ata.")
+				os.Exit(1)
+			}
 			switch command {
 			case SCSI, ATA:
 				if deviceConf == nil {
@@ -114,19 +137,23 @@ func main() {
 				}
 				deviceConf.CommandType = command
 			default:
-				fmt.Printf("Wrong command_type -c %s. Must be one of: scsi, ata", command)
+				fmt.Printf("Wrong command_type -c %s. Must be one of: scsi, ata.", command)
 				os.Exit(1)
 			}
 
 		case "-l":
-			config.Defaults.LogFile = os.Args[index+2]
+			logfile, err := argument(index)
+			if err != nil {
+				fmt.Println("Missing logfile after -l.")
+				os.Exit(1)
+			}
+			config.Defaults.LogFile = logfile
 
 		case "-d":
 			config.Defaults.Debug = true
 
 		case "-h":
-			fmt.Println("usage: hd-idle [-t <disk>] [-s <symlink_policy>] [-a <name>] [-i <idle_time>] " +
-				"[-c <command_type>] [-l <logfile>] [-d] [-h]")
+			usage()
 			os.Exit(0)
 		}
 	}
@@ -150,6 +177,23 @@ func main() {
 		ObserveDiskActivity(config)
 		time.Sleep(interval)
 	}
+}
+
+func argument(index int) (string, error) {
+	argIndex := index + 2
+	if argIndex >= len(os.Args) {
+		return "", fmt.Errorf("option requires argument")
+	}
+	arg := os.Args[argIndex]
+	if arg[:1] == "-" {
+		return "", fmt.Errorf("option requires argument")
+	}
+	return arg, nil
+}
+
+func usage() {
+	fmt.Println("usage: hd-idle [-t <disk>] [-s <symlink_policy>] [-a <name>] [-i <idle_time>] " +
+		"[-c <command_type>] [-l <logfile>] [-d] [-h]")
 }
 
 func poolInterval(deviceConfs []DeviceConf) time.Duration {
