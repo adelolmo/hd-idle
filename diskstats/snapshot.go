@@ -25,7 +25,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 )
 
 /*
@@ -72,64 +71,72 @@ const (
 	writesCol     = 9 // field 10 - sectors written
 )
 
-type DiskStats struct {
-	Name        string
-	IdleTime    time.Duration
-	CommandType string
-	Reads       int
-	Writes      int
-	SpinDownAt  time.Time
-	SpinUpAt    time.Time
-	LastIoAt    time.Time
-	SpunDown    bool
+type ReadWriteStats struct {
+	Name   string
+	Reads  int
+	Writes int
 }
 
-var scsiDiskRegex *regexp.Regexp
+var scsiDiskPartition *regexp.Regexp
 
 func init() {
-	scsiDiskRegex = regexp.MustCompile("sd[a-z]$")
+	scsiDiskPartition = regexp.MustCompile("sd[a-z][0-9]+$")
 }
 
-func Snapshot() []DiskStats {
+func Snapshot() []ReadWriteStats {
 	f, err := os.Open("/proc/diskstats")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer f.Close()
 
-	return ReadSnapshot(f)
+	return readSnapshot(f)
 }
 
-func ReadSnapshot(r io.Reader) []DiskStats {
-	var snapshot []DiskStats
+func readSnapshot(r io.Reader) []ReadWriteStats {
+	diskStatsMap := make(map[string]ReadWriteStats)
+
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
 		diskStats, err := statsForDisk(scanner.Text())
-		if err == nil {
-			snapshot = append(snapshot, *diskStats)
+		if err != nil {
+			continue
 		}
+
+		if stat, ok := diskStatsMap[diskStats.Name]; ok {
+			stat.Writes += diskStats.Writes
+			stat.Reads += diskStats.Reads
+			diskStatsMap[diskStats.Name] = stat
+			continue
+		}
+
+		diskStatsMap[diskStats.Name] = *diskStats
 	}
 
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
 
-	return snapshot
+	return toSlice(diskStatsMap)
 }
 
-func statsForDisk(rawStats string) (*DiskStats, error) {
+func statsForDisk(rawStats string) (*ReadWriteStats, error) {
 	reader := strings.NewReader(rawStats)
 	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
 		cols := strings.Fields(scanner.Text())
+
 		name := cols[deviceNameCol]
 		reads, _ := strconv.Atoi(cols[readsCol])
 		writes, _ := strconv.Atoi(cols[writesCol])
-		if !scsiDiskRegex.MatchString(name) {
-			return nil, errors.New("disk is a partition")
+
+		if !scsiDiskPartition.MatchString(name) {
+			continue
 		}
-		stats := &DiskStats{
-			Name:   name,
+
+		diskName := name[:3] // remove the partition number
+		stats := &ReadWriteStats{
+			Name:   diskName,
 			Reads:  reads,
 			Writes: writes,
 		}
@@ -140,4 +147,12 @@ func statsForDisk(rawStats string) (*DiskStats, error) {
 		return nil, err
 	}
 	return nil, errors.New("cannot read disk stats")
+}
+
+func toSlice(rws map[string]ReadWriteStats) []ReadWriteStats {
+	var snapshot []ReadWriteStats
+	for _, r := range rws {
+		snapshot = append(snapshot, r)
+	}
+	return snapshot
 }
