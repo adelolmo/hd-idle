@@ -68,7 +68,7 @@ Precompiled binaries for released versions are available in the
 ### Build from source
 
 To build `hd-idle` from the source code yourself you need to have a working
-Go environment with [version 1.12 or greater installed](http://golang.org/doc/install).
+Go environment with [version 1.16 or greater installed](http://golang.org/doc/install).
 
 You can directly use the `go` tool to download and install the `hd-idle` 
 binaries into your `GOPATH`:

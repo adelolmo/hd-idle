@@ -54,7 +54,19 @@ type Config struct {
 	SkewTime time.Duration
 }
 
-var previousSnapshots []diskstats.DiskStats
+type DiskStats struct {
+	Name        string
+	IdleTime    time.Duration
+	CommandType string
+	Reads       int
+	Writes      int
+	SpinDownAt  time.Time
+	SpinUpAt    time.Time
+	LastIoAt    time.Time
+	SpunDown    bool
+}
+
+var previousSnapshots []DiskStats
 var now = time.Now()
 var lastNow = time.Now()
 
@@ -64,7 +76,12 @@ func ObserveDiskActivity(config *Config) {
 	now = time.Now()
 	resolveSymlinks(config)
 	for _, stats := range actualSnapshot {
-		updateState(stats, config)
+		d := &DiskStats{
+			Name:   stats.Name,
+			Reads:  stats.Reads,
+			Writes: stats.Writes,
+		}
+		updateState(*d, config)
 	}
 	lastNow = now
 }
@@ -89,7 +106,7 @@ func resolveSymlinks(config *Config) {
 	}
 }
 
-func updateState(tmp diskstats.DiskStats, config *Config) {
+func updateState(tmp DiskStats, config *Config) {
 	dsi := previousDiskStatsIndex(tmp.Name)
 	if dsi < 0 {
 		previousSnapshots = append(previousSnapshots, initDevice(tmp, config))
@@ -156,7 +173,7 @@ func previousDiskStatsIndex(diskName string) int {
 	return -1
 }
 
-func initDevice(stats diskstats.DiskStats, config *Config) diskstats.DiskStats {
+func initDevice(stats DiskStats, config *Config) DiskStats {
 	idle := config.Defaults.Idle
 	command := config.Defaults.CommandType
 	deviceConf := deviceConfig(stats.Name, config)
@@ -165,7 +182,7 @@ func initDevice(stats diskstats.DiskStats, config *Config) diskstats.DiskStats {
 		command = deviceConf.CommandType
 	}
 
-	return diskstats.DiskStats{
+	return DiskStats{
 		Name:        stats.Name,
 		LastIoAt:    time.Now(),
 		SpinUpAt:    time.Now(),
@@ -206,7 +223,7 @@ func spindownDisk(device, command string) error {
 	return nil
 }
 
-func logSpinup(ds diskstats.DiskStats, file string) {
+func logSpinup(ds DiskStats, file string) {
 	now := time.Now()
 	text := fmt.Sprintf("date: %s, time: %s, disk: %s, running: %d, stopped: %d",
 		now.Format("2006-01-02"), now.Format("15:04:05"), ds.Name,
