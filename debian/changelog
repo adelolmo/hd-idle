@@ -1,3 +1,12 @@
+hd-idle (1.14) unstable; urgency=medium
+
+  * Add logrotate for log file /var/log/hd-idle.log
+  * Use partitions read/write to calculate disk activity:
+    It changes the method to calculate disk activity. Now the disk activity is calculated by watching read/write
+    changes on partition level instead of disk level.
+
+ -- Andoni del Olmo <andoni.delolmo@gmail.com>  Sun, 28 Mar 2021 14:34:51 +0200
+
 hd-idle (1.13) unstable; urgency=medium
 
   * Fix crash when required arguments are not given. Now it will fail
