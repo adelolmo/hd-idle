@@ -46,7 +46,8 @@ func TestTakeSnapshot(t *testing.T) {
    8      19 sdd3 52 0 2632 76 0 0 0 0 0 76 76
    8      21 sdd5 76541 1090 22221672 979636 8845 2335 8316352 14986056 0 470364 15965544
    8      22 sdd6 904573 109813 14736818 8485644 51818 109868 7366288 2094080 0 1642436 10580612
-   8      22 sdd11 904573 109813 1 8485644 51818 109868 1 2094080 0 1642436 10580612`
+   8      22 sdd11 904573 109813 1 8485644 51818 109868 1 2094080 0 1642436 10580612
+   8      32 sde 2891 192 57743 13523 1085550 14035 982686648 9819204 0 5102050 10209416 0 0 0 0 12140 376689` // sde-crypt
 
 	stats := readSnapshot(strings.NewReader(s))
 	sort.Slice(stats, func(i, j int) bool {
@@ -58,6 +59,7 @@ func TestTakeSnapshot(t *testing.T) {
 		{Name: "sdb", Reads: 727475192, Writes: 404215912},
 		{Name: "sdc", Reads: 6493672, Writes: 6370936},
 		{Name: "sdd", Reads: 37054579, Writes: 15682641},
+		{Name: "sde", Reads: 57743, Writes: 982686648},
 	}
 
 	if len(expected) != len(stats) {
