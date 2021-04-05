@@ -77,10 +77,10 @@ type ReadWriteStats struct {
 	Writes int
 }
 
-var scsiDiskPartition *regexp.Regexp
+var scsiRegex *regexp.Regexp
 
 func init() {
-	scsiDiskPartition = regexp.MustCompile("sd[a-z][0-9]+$")
+	scsiRegex = regexp.MustCompile("sd[a-z].*$")
 }
 
 func Snapshot() []ReadWriteStats {
@@ -103,14 +103,28 @@ func readSnapshot(r io.Reader) []ReadWriteStats {
 			continue
 		}
 
-		if stat, ok := diskStatsMap[diskStats.Name]; ok {
-			stat.Writes += diskStats.Writes
-			stat.Reads += diskStats.Reads
-			diskStatsMap[diskStats.Name] = stat
+		diskName := diskStats.Name[:3] // remove the partition number
+
+		if len(diskStats.Name) == 3 { // is a disk (e.g. sda)
+			diskStatsMap[diskName] = *diskStats
 			continue
 		}
 
-		diskStatsMap[diskStats.Name] = *diskStats
+		partitionNumber := diskStats.Name[3:]
+		if partitionNumber == "1" { // is the first partition (e.g. sda1)
+			diskStatsMap[diskName] = ReadWriteStats{
+				Name:   diskName,
+				Reads:  diskStats.Reads,
+				Writes: diskStats.Writes,
+			}
+			continue
+		}
+
+		// is the partition n+1 (e.g. sda2, sda3)
+		stat, _ := diskStatsMap[diskName]
+		stat.Writes += diskStats.Writes
+		stat.Reads += diskStats.Reads
+		diskStatsMap[diskName] = stat
 	}
 
 	if err := scanner.Err(); err != nil {
@@ -130,13 +144,12 @@ func statsForDisk(rawStats string) (*ReadWriteStats, error) {
 		reads, _ := strconv.Atoi(cols[readsCol])
 		writes, _ := strconv.Atoi(cols[writesCol])
 
-		if !scsiDiskPartition.MatchString(name) {
+		if !scsiRegex.MatchString(name) {
 			continue
 		}
 
-		diskName := name[:3] // remove the partition number
 		stats := &ReadWriteStats{
-			Name:   diskName,
+			Name:   name,
 			Reads:  reads,
 			Writes: writes,
 		}
