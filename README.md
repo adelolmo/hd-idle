@@ -12,6 +12,7 @@ a program like `hd-idle` is required to spin down idle disks automatically.
   * [Monitor the skew between monitoring cycles](#monitor-the-skew-between-monitoring-cycles)
   * [Resolve symlinks in runtime](#resolve-symlinks-in-runtime)
   * [Log disk spin up](#log-disk-spin-up)
+  * [Use disk partitions to calculate activity](#use-disk-partitions-to-calculate-activity)
 * [Install](#Install)
   * [Precompiled binaries](#precompiled-binaries)
   * [Build from source](#build-from-source)
@@ -55,6 +56,12 @@ This should capture suspend events as well as excessive machine load.
 ### Log disk spin up
 
 Show in standard output when disks spin up. 
+
+### Use disk partitions to calculate activity
+
+The disk activity is calculated by watching read/write changes on partition level instead of disk level.
+This is required for kernels newer than 5.4 LTS, because disk monitoring tools change read/write values on disk level,
+although there's no real activity on the disk itself.
 
 ## Install
 
