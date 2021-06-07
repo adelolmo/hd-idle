@@ -45,6 +45,7 @@ also be a symlink (e.g. /dev/disk/by-uuid/...)
 .B \-i idle_time
 Idle time in seconds for the currently named disk(s) (-a <name>) or for
 all disks.
+Setting this value to "0" will never spin down the disk(s).
 .TP
 .B \-c command_type
 Api call to stop the device. Possible values are "scsi" (default value)
