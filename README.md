@@ -134,6 +134,7 @@ Command line options:
 + -i *idle_time*          
                         Idle time in seconds for the currently named disk(s)
                         (-a *name*) or for all disks.
+                        Setting this value to `0` will never spin down the disk(s).
                          
 + -c *command_type*       
                         Api call to stop the device. Possible values are `scsi`
