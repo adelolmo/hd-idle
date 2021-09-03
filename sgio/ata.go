@@ -40,10 +40,9 @@ func StopAtaDevice(device string) error {
 	}
 
 	if err = sendAtaCommand(f, ataOpStandbyNow1); err != nil {
-		return err
-	}
-	if err = sendAtaCommand(f, ataOpStandbyNow2); err != nil {
-		return err
+		if err = sendAtaCommand(f, ataOpStandbyNow2); err != nil {
+			return err
+		}
 	}
 
 	if err := f.Close(); err != nil {
