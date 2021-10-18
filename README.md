@@ -41,8 +41,8 @@ but disk starting with `ata` do not.
     ata-WDC_WD50EZRX-
     usb-WD_My_Book_1140_
     
-[hdparm](https://en.wikipedia.org/wiki/Hdparm) on the other hand stops always the drives without any problems.
-It uses `ATA` api calls to set disk on standby. `hd-idle` comes with `ATA` commands support to replicate `hdparm`'s api calls.
+[hdparm](https://en.wikipedia.org/wiki/Hdparm) on the other hand always stops the drives without any problems.
+It uses `ATA` api calls to send disks to standby. `hd-idle` comes with `ATA` commands support to replicate `hdparm`'s api calls.
 
 ### Monitor the skew between monitoring cycles
 
@@ -142,15 +142,15 @@ Command line options:
 
 + -s *symlink_policy*   
                         Set the policy to resolve symlinks for devices. If set 
-                        to `0`, symlinks are resolve only on start. If set to `1`,
+                        to `0`, symlinks are resolved only on start. If set to `1`,
                         symlinks are also resolved on runtime until success.
-                        By default symlinks are only resolve on start. If the 
+                        By default symlinks are only resolved on start. If the 
                         symlink doesn't resolve to a device, the default
                         configuration will be applied.
 
 + -l *logfile*            
                         Name of logfile (written only after a disk has spun
-                        up or spun down). Please note that this option might cause the
+                        up or down). Please note that this option might cause the
                         disk which holds the logfile to spin up just because
                         another disk had some activity. On single-disk systems,
                         this option should not cause any additional spinups.
@@ -187,7 +187,7 @@ for subsequent idle-time settings.
     hd-idle -i 0 -a sda -i 300 -a sdb -i 1200
     ```
     This example sets the default idle time to 0 (meaning hd-idle will never
-    try to spin down a disk) and default `scsi` api command, then sets explicit 
+    try to spin down a disk) and the default api command to `scsi`, then sets explicit 
     idle times for disks which have the string `sda` or `sdb` in their device name.
  
 3) 
@@ -199,15 +199,15 @@ for subsequent idle-time settings.
     hd-idle -i 0 -c ata -a sda -i 300 -a sdb -i 1200 -c scsi
     ```  
     This example sets the default idle time to 0 (meaning hd-idle will never
-    try to spin down a disk) and default `ata` api command, then sets explicit 
+    try to spin down a disk) and the default api command to `ata`, then sets explicit 
     idle times for disks which have the string `sda` or `sdb` in their device name 
     and sets `sdb` to use `scsi` api command.
 
 ## Understand the logs
 
-By default `hd-idle` only logs into the standard output. You can find them in the syslog if the application starts via service.
+By default `hd-idle` only logs to the standard output. You can find them in the syslog if the application starts via service.
 
-If you set the log file (`-l` flag) then the application writes extra details on it. (Check the [Configuration](#Configuration) section).
+If you set the log file (`-l` flag) then the application writes extra details to it. (Check the [Configuration](#Configuration) section).
 
 ### Standard log
 
@@ -226,7 +226,7 @@ Aug  8 00:28:55 enterprise hd-idle[9958]: sdb spindown
 
 ### Log file
 
-You can enable the log file with the flag `-l` follow by the log path. (Check the [Configuration](#Configuration) section).
+You can enable the log file with the flag `-l` followed by the log path. (Check the [Configuration](#Configuration) section).
 
 This is the kind of entry shown in the log file:
 
@@ -237,8 +237,8 @@ date: 2020-07-29, time: 07:59:57, disk: sdc, running: 601, stopped: 76654
 Explanation:
 * `date` and `time` when the disk spins up.
 * `disk` involved.
-* `running` seconds the device was running before it spun up the last time.
-* `stopped` seconds since last spin down. This is the time the disk was down before spinning up.
+* `running` seconds the device was running before it spun down the last time.
+* `stopped` seconds since last spin down. This is the time the disk was asleep before spinning up.
 
 A bit more on `running` explained with an example:
 
