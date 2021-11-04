@@ -231,7 +231,8 @@ You can enable the log file with the flag `-l` followed by the log path. (Check 
 This is the kind of entry shown in the log file:
 
 ```
-date: 2020-07-29, time: 07:59:57, disk: sdc, running: 601, stopped: 76654
+date: 2020-07-29, time: 02:00:00, disk: sdc, running: 3645, stopped: 76654
+date: 2020-07-29, time: 08:00:00, disk: sdc, running: 600, stopped: 21000
 ```
 
 Explanation:
@@ -240,21 +241,25 @@ Explanation:
 * `running` seconds the device was running before it spun down the last time.
 * `stopped` seconds since last spin down. This is the time the disk was asleep before spinning up.
 
-A bit more on `running` explained with an example:
+*Note:*
+1. *The log file is written after a full cycle of running-stopped-wakeup.*
+2. *If you want to determine the timestamp of a wake-source you need to have a look at the previous line. In the log above line 2 shows an uptime of 601 seconds, the wake was issued at 2:00:00 seen in line 1 though.*
 
-| timestamp | current disk spin | event | running | stopped |
+A bit more on `running` explained with above example for creating line 2:
+
+| timestamp | previous disk spin | current event | running | stopped |
 | :-------------: | :----------: | :-----------: | :-----------: | :-----------: |
-| 5:00 | down | disk activity | ? | ? |
-| 6:00 | up | go to sleep | - | - |
-| 9:00 | down | disk activity | 6:00 - 5:00 = 1h (3600s) | 9:00 - 6:00 = 3h (10800s) |
+| 2:00 | down | disk activity | ? | ? |
+| 2:10 | up | go to sleep | - | - |
+| 8:00 | down | disk activity | 2:10 - 2:00 = 10 m (600s) | 8:00 - 2:10 = 5h50m (21000s) |
 
 Explanation:
 
-At 5:00 the disk is on standby and hd-idle detects disk activity.
+At 2:00 the disk is on standby and hd-idle detects disk activity.
 
-At 6:00 the disk is active and hd-idle determines inactivity of the disk and spins it down.
+At 2:10 the disk is active and hd-idle determines inactivity of the disk and spins it down.
 
-At 9:00 the disk is on standby and hd-idle detects disk activity. It writes on the log file 1h of previous disk spin up and 3h of standby.   
+At 8:00 the disk is on standby and hd-idle detects disk activity. A log entry gets written with 10m of previous disk spin up and 5h50m of standby.
 
 
 ## Warning on spinning down disks
