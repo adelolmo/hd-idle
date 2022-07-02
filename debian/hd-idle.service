@@ -1,11 +1,13 @@
 [Unit]
 Description=hd-idle - spin down idle hard disks
 Documentation=man:hd-idle(8)
+After=suspend.target
 
 [Service]
 Type=simple
 EnvironmentFile=/etc/default/hd-idle
 ExecStart=/usr/sbin/hd-idle $HD_IDLE_OPTS
+Restart=always
 
 [Install]
 WantedBy=multi-user.target
