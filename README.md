@@ -77,17 +77,17 @@ Precompiled binaries for released versions are available in the
 To build `hd-idle` from the source code yourself you need to have a working
 Go environment with [version 1.16 or greater installed](http://golang.org/doc/install).
 
-You can directly use the `go` tool to download and install the `hd-idle` 
-binaries into your `GOPATH`:
+Open a terminal and execute these commands:
 
-    $ go get github.com/adelolmo/hd-idle
-    $ hd-idle
+    git clone https://github.com/adelolmo/hd-idle
+    cd hd-idle
+    go build
 
-On Debian you can also clone the repository yourself and build using `dpkg-buildpackage`.
+On Debian you can also build the package yourself using `dpkg-buildpackage`:
 
-    $ git clone https://github.com/adelolmo/hd-idle.git
-    $ cd hd-idle
-    $ dpkg-buildpackage -a armhf -us -uc -b
+    git clone https://github.com/adelolmo/hd-idle.git
+    cd hd-idle
+    dpkg-buildpackage -a armhf -us -uc -b
     
 In the example above, the package is built for `armhf`, but you can build it also for the platforms `i386`, `amd64`, and `arm64` 
 by substituting the parameter `-a`.
