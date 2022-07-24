@@ -241,21 +241,25 @@ Explanation:
 * `running` seconds the device was running before it spun down the last time.
 * `stopped` seconds since last spin down. This is the time the disk was asleep before spinning up.
 
-A bit more on `running` explained with an example:
+**Important Note:**
 
-| timestamp | current disk spin | event | running | stopped |
-| :-------------: | :----------: | :-----------: | :-----------: | :-----------: |
-| 5:00 | down | disk activity | ? | ? |
-| 6:00 | up | go to sleep | - | - |
-| 9:00 | down | disk activity | 6:00 - 5:00 = 1h (3600s) | 9:00 - 6:00 = 3h (10800s) |
+The log file is written after a full cycle of running-stopped-wakeup.
+
+A bit more on `running` explained with the above example:
+
+|      timestamp      | disk spin | event | new disk spin |          running           |                          stopped                          |
+|:-------------------:| :----------: | :-----------: |:-------------:|:--------------------------:|:---------------------------------------------------------:|
+| 2020-07-29 07:59:57 | down | disk activity |      up       |             ?              |                             ?                             |
+| 2020-07-29 08:09:58 | up | go to sleep |     down      |             -              |                             -                             |
+| 2020-07-30 05:28:01 | down | disk activity |      up       | 08:09:58 - 07:59:57 = 601s | 2020-07-30 05:28:01 - 2020-07-29 08:09:58 = ~21h (76654s) |
 
 Explanation:
 
-At 5:00 the disk is on standby and hd-idle detects disk activity.
+At 07:59:57 the disk is on standby and hd-idle detects disk activity.
 
-At 6:00 the disk is active and hd-idle determines inactivity of the disk and spins it down.
+At 08:09:58 the disk is active and hd-idle determines inactivity of the disk and spins it down.
 
-At 9:00 the disk is on standby and hd-idle detects disk activity. It writes on the log file 1h of previous disk spin up and 3h of standby.   
+At 05:28:01 on the next day the disk is on standby and hd-idle detects disk activity. It writes on the log file 601s of previous disk spin up and ~21h of standby.   
 
 
 ## Warning on spinning down disks
