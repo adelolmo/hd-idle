@@ -1,5 +1,6 @@
 MAKEFLAGS += --silent
 
+TARGET = hd-idle
 PLATFORM := $(shell uname -m)
 
 ARCH :=
@@ -26,12 +27,28 @@ GOARCH :=
 		GOARCH = arm
 	endif
 
-compile: test
+ifdef DESTDIR
+# dh_auto_install (Debian) sets this variable
+  TARGET_DIR = $(DESTDIR)/usr
+else
+  TARGET_DIR ?= /usr/local
+endif
+
+all: $(TARGET)
+
+distclean: clean
+
+clean:
+	rm -f $(TARGET)
+
+install: $(TARGET)
+	install -D -g root -o root $(TARGET) $(TARGET_DIR)/sbin/$(TARGET)
+	install -D -g root -o root $(TARGET).8 $(TARGET_DIR)/share/man/man8/$(TARGET).8
+
+$(TARGET): test
 ifeq ($(GOARCH),)
 	$(error Invalid ARCH: $(ARCH))
 endif
-	go mod tidy
-	go mod vendor > /dev/null 2>&1
 	GOOS=linux GOARCH=$(GOARCH) go build
 
 test:
