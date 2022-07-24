@@ -23,6 +23,7 @@ a program like `hd-idle` is required to spin down idle disks automatically.
   * [Log file](#log-file)
 * [Warning on spinning down disks](#warning-on-spinning-down-disks)
 * [Troubleshot](#Troubleshot)
+  * [LUKS support](#luks-support)
   * [SCSI response not ok](#scsi-response-not-ok)
 
 ## Extra features
@@ -279,6 +280,52 @@ You have been warned...
 # Troubleshot
 
 This section covers some usual issues that user's face while using `hd-idle`.
+
+## LUKS support
+
+Using encrypted disk or partitions with LUKS is supported by the use of symlinks.
+
+1. Run the following command with you're disk mounted:
+`sudo lsblk /dev/sd* -o PATH,FSSIZE,LABEL,UUID,PARTLABEL,PARTUUID,MODEL,SIZE,SERIAL,TYPE,WWN`
+
+```
+PATH                            FSSIZE LABEL UUID                                 PARTLABEL PARTUUID                             MODEL   SIZE SERIAL TYPE  WWN
+/dev/sde                                                                                                                         ST400   3.7T ZGY0LB disk  0x5000c500a3d1d419
+/dev/sde1                                    100e952e-0ffb-4b73-bb1a-8401d4fe56c0 dropbox   14a81aa8-c2c9-448e-967b-85d87dc9b488           1T        part  0x5000c500a3d1d419
+/dev/sde1                                    100e952e-0ffb-4b73-bb1a-8401d4fe56c0 dropbox   14a81aa8-c2c9-448e-967b-85d87dc9b488           1T        part  0x5000c500a3d1d419
+/dev/sde2                         2.6T three 175e2227-d24f-4ad0-9e42-2ddb8846682d           d2792423-3c07-44fe-ab6b-a1aca61c73a5         2.7T        part  0x5000c500a3d1d419
+/dev/sde2                         2.6T three 175e2227-d24f-4ad0-9e42-2ddb8846682d           d2792423-3c07-44fe-ab6b-a1aca61c73a5         2.7T        part  0x5000c500a3d1d419
+/dev/mapper/luks-100e952e-0ffb-4b73-bb1a-8401d4fe56c0
+                               1007.8G dropbox
+                                             649dd15e-6750-472c-8185-4d76bffc2490                                                       1024G        crypt 
+```
+
+You have to take symlinks that resolve to disk devices: `/dev/sd*`. 
+
+In the example above `/dev/mapper/luks-100e952e-0ffb-4b73-bb1a-8401d4fe56c0` is the Path to the encrypted partition, 
+which WWN is `0x5000c500a3d1d419`. 
+
+2. Run the following command to see which devices the system has identified using `by-id`: 
+`sudo ls -lv /dev/disk/by-id/`
+
+Output:
+```
+lrwxrwxrwx 1 root root  9 Jul 18 15:56 ata-ST4000DM005-2DP166_ZGY0LBRB -> ../../sde
+lrwxrwxrwx 1 root root 10 Jul 18 16:01 ata-ST4000DM005-2DP166_ZGY0LBRB-part1 -> ../../sde1
+lrwxrwxrwx 1 root root 10 Jul 18 15:56 ata-ST4000DM005-2DP166_ZGY0LBRB-part2 -> ../../sde2
+lrwxrwxrwx 1 root root  9 Jul 18 15:56 wwn-0x5000c500a3d1d419 -> ../../sde
+lrwxrwxrwx 1 root root 10 Jul 18 16:01 wwn-0x5000c500a3d1d419-part1 -> ../../sde1
+lrwxrwxrwx 1 root root 10 Jul 18 15:56 wwn-0x5000c500a3d1d419-part2 -> ../../sde2
+```
+
+Here we see that we can either use `ata-ST4000DM005-2DP166_ZGY0LBRB` or `wwn-0x5000c500a3d1d419` as symlinks.
+
+3. Edit `/etc/default/hd-idle` to use the symlink you prefer. 
+In my case, I went with the symlink using WWN (unique storage identifier), yet I could have chosen MODEL (device identifier) instead.
+
+`HD_IDLE_OPTS='-i 0 -c ata -s 1 -l /var/log/hd-idle.log -a /dev/disk/by-id/wwn-0x5000c500a3d1d419 -i 600'`
+Or
+`HD_IDLE_OPTS='-i 0 -c ata -s 1 -l /var/log/hd-idle.log -a /dev/disk/by-id/ata-ST4000DM005-2DP166_ZGY0LBRB -i 600'`
 
 ## SCSI response not ok
 
