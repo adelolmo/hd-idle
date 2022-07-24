@@ -2,6 +2,7 @@
 Description=hd-idle - spin down idle hard disks
 Documentation=man:hd-idle(8)
 After=suspend.target
+After=hibernate.target
 
 [Service]
 Type=simple
