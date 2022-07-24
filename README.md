@@ -81,7 +81,7 @@ Open a terminal and execute these commands:
 
     git clone https://github.com/adelolmo/hd-idle
     cd hd-idle
-    go build
+    make
 
 On Debian you can also build the package yourself using `dpkg-buildpackage`:
 

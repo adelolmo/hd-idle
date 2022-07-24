@@ -1,6 +1,7 @@
 .idea
 .run
 *.iml
+hd-idle
 build
 obj*
 debian/hd-idle
