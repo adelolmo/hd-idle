@@ -19,6 +19,7 @@ package diskstats
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -71,16 +72,32 @@ const (
 	writesCol     = 9 // field 10 - sectors written
 )
 
+type DeviceType int
+
+const (
+	Unknown DeviceType = iota
+	Disk
+	Partition
+	DeviceMapper
+)
+
 type ReadWriteStats struct {
 	Name   string
+	Type   DeviceType
 	Reads  int
 	Writes int
 }
 
-var scsiRegex *regexp.Regexp
+var scsiDiskRegex *regexp.Regexp
+var scsiPartitionRegex *regexp.Regexp
+var deviceMapperRegex *regexp.Regexp
+
+type diskHolderGetterFunc func(string) (string, error)
 
 func init() {
-	scsiRegex = regexp.MustCompile("sd[a-z].*$")
+	scsiDiskRegex = regexp.MustCompile("sd[a-z]$")
+	scsiPartitionRegex = regexp.MustCompile("sd[a-z].+$")
+	deviceMapperRegex = regexp.MustCompile("dm-.*$")
 }
 
 func Snapshot() []ReadWriteStats {
@@ -90,11 +107,13 @@ func Snapshot() []ReadWriteStats {
 	}
 	defer f.Close()
 
-	return readSnapshot(f)
+	return readSnapshot(f, getDiskHolder)
 }
 
-func readSnapshot(r io.Reader) []ReadWriteStats {
+func readSnapshot(r io.Reader, holderGetter diskHolderGetterFunc) []ReadWriteStats {
 	diskStatsMap := make(map[string]ReadWriteStats)
+	partitionStatsMap := make(map[string]ReadWriteStats)
+	deviceMapperHolderMap := make(map[string]string)
 
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
@@ -103,35 +122,72 @@ func readSnapshot(r io.Reader) []ReadWriteStats {
 			continue
 		}
 
-		diskName := diskStats.Name[:3] // remove the partition number
+		if diskStats.Type == Disk {
+			diskStatsMap[diskStats.Name] = *diskStats
 
-		if len(diskStats.Name) == 3 { // is a disk (e.g. sda)
-			diskStatsMap[diskName] = *diskStats
-			continue
-		}
-
-		partitionNumber := diskStats.Name[3:]
-		if partitionNumber == "1" { // is the first partition (e.g. sda1)
-			diskStatsMap[diskName] = ReadWriteStats{
-				Name:   diskName,
-				Reads:  diskStats.Reads,
-				Writes: diskStats.Writes,
+			if dmName, err := holderGetter(diskStats.Name); err == nil && dmName != "" {
+				deviceMapperHolderMap[dmName] = diskStats.Name
 			}
-			continue
+		} else {
+			partitionStatsMap[diskStats.Name] = *diskStats
 		}
-
-		// is the partition n+1 (e.g. sda2, sda3)
-		stat, _ := diskStatsMap[diskName]
-		stat.Writes += diskStats.Writes
-		stat.Reads += diskStats.Reads
-		diskStatsMap[diskName] = stat
 	}
 
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
 
+	for _, partitionStats := range partitionStatsMap {
+		var diskName string
+		var ok bool
+
+		switch partitionStats.Type {
+		case Partition:
+			diskName = partitionStats.Name[:3]
+		case DeviceMapper:
+			if diskName, ok = deviceMapperHolderMap[partitionStats.Name]; !ok {
+				continue
+			}
+		default:
+			continue
+		}
+
+		var diskStats ReadWriteStats
+		if diskStats, ok = diskStatsMap[diskName]; !ok {
+			continue
+		}
+		if diskStats.Type == Disk {
+			// replace disk statistics by partition or holder stats
+			diskStats.Type = partitionStats.Type
+			diskStats.Writes = partitionStats.Writes
+			diskStats.Reads = partitionStats.Reads
+		} else {
+			// otherwise, accumulate stats of all partitions and holder if any
+			diskStats.Writes += partitionStats.Writes
+			diskStats.Reads += partitionStats.Reads
+		}
+		diskStatsMap[diskName] = diskStats
+	}
+
 	return toSlice(diskStatsMap)
+}
+
+func getDiskHolder(diskName string) (string, error) {
+	/* This returns only the first holder. In practice when using LUKS, there is only one holder */
+
+	holdersDir := fmt.Sprintf("/sys/block/%s/holders/", diskName)
+	if _, err := os.Stat(holdersDir); os.IsNotExist(err) {
+		return "", err
+	}
+
+	files, err := os.ReadDir(holdersDir)
+	if err != nil {
+		return "", err
+	}
+	for _, file := range files {
+		return file.Name(), nil
+	}
+	return "", nil
 }
 
 func statsForDisk(rawStats string) (*ReadWriteStats, error) {
@@ -141,15 +197,23 @@ func statsForDisk(rawStats string) (*ReadWriteStats, error) {
 		cols := strings.Fields(scanner.Text())
 
 		name := cols[deviceNameCol]
+		deviceType := Unknown
 		reads, _ := strconv.Atoi(cols[readsCol])
 		writes, _ := strconv.Atoi(cols[writesCol])
 
-		if !scsiRegex.MatchString(name) {
+		if scsiDiskRegex.MatchString(name) {
+			deviceType = Disk
+		} else if scsiPartitionRegex.MatchString(name) {
+			deviceType = Partition
+		} else if deviceMapperRegex.MatchString(name) {
+			deviceType = DeviceMapper
+		} else {
 			continue
 		}
 
 		stats := &ReadWriteStats{
 			Name:   name,
+			Type:   deviceType,
 			Reads:  reads,
 			Writes: writes,
 		}
