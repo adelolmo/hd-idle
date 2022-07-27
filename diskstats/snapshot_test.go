@@ -22,6 +22,13 @@ import (
 	"testing"
 )
 
+func mockGetDiskHolder(diskName string) (string, error) {
+	if diskName == "sdf" {
+		return "dm-4", nil
+	}
+	return "", nil
+}
+
 func TestTakeSnapshot(t *testing.T) {
 	s := `   7       0 loop0 0 0 0 0 0 0 0 0 0 0 0
    7       1 loop1 0 0 0 0 0 0 0 0 0 0 0
@@ -47,19 +54,22 @@ func TestTakeSnapshot(t *testing.T) {
    8      21 sdd5 76541 1090 22221672 979636 8845 2335 8316352 14986056 0 470364 15965544
    8      22 sdd6 904573 109813 14736818 8485644 51818 109868 7366288 2094080 0 1642436 10580612
    8      22 sdd11 904573 109813 1 8485644 51818 109868 1 2094080 0 1642436 10580612
-   8      32 sde 2891 192 57743 13523 1085550 14035 982686648 9819204 0 5102050 10209416 0 0 0 0 12140 376689` // sde-crypt
+   8      32 sde 2891 192 57743 13523 1085550 14035 982686648 9819204 0 5102050 10209416 0 0 0 0 12140 376689
+   8      34 sdf 207814 251309 3670180 1378314 38505 27680 21787544 926421 0 552176 2325026 0 0 0 0 272 20290
+ 253       4 dm-4 25371 0 206376 195492 1330 0 10640 657392 0 19480 852884 0 0 0 0 0 0`
 
-	stats := readSnapshot(strings.NewReader(s))
+	stats := readSnapshot(strings.NewReader(s), mockGetDiskHolder)
 	sort.Slice(stats, func(i, j int) bool {
 		return stats[i].Name < stats[j].Name
 	})
 
 	expected := []ReadWriteStats{
-		{Name: "sda", Reads: 37536344, Writes: 10439592},
-		{Name: "sdb", Reads: 727475192, Writes: 404215912},
-		{Name: "sdc", Reads: 6493672, Writes: 6370936},
-		{Name: "sdd", Reads: 37054579, Writes: 15682641},
-		{Name: "sde", Reads: 57743, Writes: 982686648},
+		{Name: "sda", Type: Partition, Reads: 37536344, Writes: 10439592},
+		{Name: "sdb", Type: Partition, Reads: 727475192, Writes: 404215912},
+		{Name: "sdc", Type: Partition, Reads: 6493672, Writes: 6370936},
+		{Name: "sdd", Type: Partition, Reads: 37054579, Writes: 15682641},
+		{Name: "sde", Type: Disk, Reads: 57743, Writes: 982686648},
+		{Name: "sdf", Type: DeviceMapper, Reads: 206376, Writes: 10640},
 	}
 
 	if len(expected) != len(stats) {
