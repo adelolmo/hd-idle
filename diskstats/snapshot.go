@@ -92,7 +92,7 @@ var scsiDiskRegex *regexp.Regexp
 var scsiPartitionRegex *regexp.Regexp
 var deviceMapperRegex *regexp.Regexp
 
-type diskHolderGetterFunc func(string) (string, error)
+type diskHolderGetterFunc func(string, string) (string, error)
 
 func init() {
 	scsiDiskRegex = regexp.MustCompile("sd[a-z]$")
@@ -125,7 +125,7 @@ func readSnapshot(r io.Reader, holderGetter diskHolderGetterFunc) []ReadWriteSta
 		if diskStats.Type == Disk {
 			diskStatsMap[diskStats.Name] = *diskStats
 
-			if dmName, err := holderGetter(diskStats.Name); err == nil && dmName != "" {
+			if dmName, err := holderGetter(diskStats.Name, "/sys/class/block/%s/holders/"); err == nil && dmName != "" {
 				deviceMapperHolderMap[dmName] = diskStats.Name
 			}
 		} else {
@@ -172,10 +172,10 @@ func readSnapshot(r io.Reader, holderGetter diskHolderGetterFunc) []ReadWriteSta
 	return toSlice(diskStatsMap)
 }
 
-func getDiskHolder(diskName string) (string, error) {
+func getDiskHolder(diskName, pathFormat string) (string, error) {
 	/* This returns only the first holder. In practice when using LUKS, there is only one holder */
 
-	holdersDir := fmt.Sprintf("/sys/block/%s/holders/", diskName)
+	holdersDir := fmt.Sprintf(pathFormat, diskName)
 	if _, err := os.Stat(holdersDir); os.IsNotExist(err) {
 		return "", err
 	}

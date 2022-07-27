@@ -17,12 +17,14 @@
 package diskstats
 
 import (
+	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 	"testing"
 )
 
-func mockGetDiskHolder(diskName string) (string, error) {
+func mockGetDiskHolder(diskName, format string) (string, error) {
 	if diskName == "sdf" {
 		return "dm-4", nil
 	}
@@ -82,5 +84,65 @@ func TestTakeSnapshot(t *testing.T) {
 		if exp != act {
 			t.Fatalf("Expected %v but found %v", exp, act)
 		}
+	}
+}
+
+func TestGetDiskHolder(t *testing.T) {
+	type wantParams struct {
+		name         string
+		errorMessage string
+	}
+	tests := []struct {
+		name       string
+		diskName   string
+		holderPath string
+		want       wantParams
+	}{
+		{
+			name:       "disk not found",
+			diskName:   "sda",
+			holderPath: "",
+			want: wantParams{
+				name:         "",
+				errorMessage: "stat /tmp/sys/class/block/sda/holders/: no such file or directory",
+			},
+		}, {
+			name:       "disk found",
+			diskName:   "sda",
+			holderPath: "/tmp/sys/class/block/sda/holders/dm-0",
+			want: wantParams{
+				name:         "dm-0",
+				errorMessage: "",
+			},
+		},
+	}
+	for _, test := range tests {
+		err := os.RemoveAll("/tmp/sys")
+		if err != nil {
+			panic(err)
+		}
+		t.Run(test.name, func(t *testing.T) {
+			if len(test.holderPath) > 0 {
+				if err := os.MkdirAll(filepath.Dir(test.holderPath), 0770); err != nil {
+					panic(err)
+				}
+				_, err := os.Create(test.holderPath)
+				if err != nil {
+					panic(err)
+				}
+			}
+			got, err := getDiskHolder(test.diskName, "/tmp/sys/class/block/%s/holders/")
+
+			if len(test.want.errorMessage) > 0 &&
+				test.want.errorMessage != err.Error() {
+
+				t.Fatalf("Expected %v but found %v", test.want.errorMessage, err.Error())
+			}
+
+			if test.want.name != got {
+				t.Fatalf("Expected %v but found %v", test.want.name, got)
+			}
+
+		})
 	}
 }
