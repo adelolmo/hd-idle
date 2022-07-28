@@ -1,3 +1,27 @@
+hd-idle (1.17) unstable; urgency=medium
+
+  [ Alexander Raab ]
+  * Readme cosmetics
+
+  [ Andoni del Olmo ]
+  * restart service after suspend
+  * go mod tidy
+  * Update readme with instructions to build with golang 17 or higher
+  * Add Makefile
+  * build debian package compiling with Makefile
+  * document usage of LUKS encrypted devices
+  * Redo explanation of how the log file works. Thanks to rabelux.
+  * restart service after hibernate
+
+  [ Sylvain Pasche ]
+  * Get statistics from device mapper devices
+
+  [ Andoni del Olmo ]
+  * use /sys/class/block/%s/holders for holderGetter + add test
+  * add test for statsForDisk
+
+ -- Andoni del Olmo <andoni.delolmo@gmail.com>  Thu, 28 Jul 2022 18:12:46 +0200
+
 hd-idle (1.16) unstable; urgency=medium
 
   [ Maximilian Bichel ]
