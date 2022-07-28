@@ -146,3 +146,68 @@ func TestGetDiskHolder(t *testing.T) {
 		})
 	}
 }
+
+func TestStatsForDisk(t *testing.T) {
+	type wantParams struct {
+		name         string
+		deviceType   DeviceType
+		errorMessage string
+	}
+	tests := []struct {
+		name string
+		line string
+		want wantParams
+	}{
+		{
+			name: "disk type",
+			line: "8 0 sda 321553 158156 37537568 5961590 50820 94361 10439592 26691430 0 3357150 32650910",
+			want: wantParams{
+				name:       "sda",
+				deviceType: Disk,
+			},
+		},
+		{
+			name: "partition type",
+			line: "8 17 sdd1 369 0 39960 1288 0 0 0 0 0 792 1288",
+			want: wantParams{
+				name:       "sdd1",
+				deviceType: Partition,
+			},
+		},
+		{
+			name: "device mapper type",
+			line: "253 4 dm-4 25371 0 206376 195492 1330 0 10640 657392 0 19480 852884 0 0 0 0 0 0",
+			want: wantParams{
+				name:       "dm-4",
+				deviceType: DeviceMapper,
+			},
+		},
+		{
+			name: "unknown type",
+			line: "7 1 loop1 0 0 0 0 0 0 0 0 0 0 0",
+			want: wantParams{
+				errorMessage: "cannot read disk stats",
+			},
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got, gotError := statsForDisk(test.line)
+
+			if test.want.errorMessage != "" && test.want.errorMessage != gotError.Error() {
+				t.Fatalf("Expected %v but found %v", test.want.errorMessage, gotError.Error())
+			}
+			if gotError != nil {
+				return
+			}
+
+			if test.want.name != got.Name {
+				t.Fatalf("Expected %v but found %v", test.want.name, got.Name)
+			}
+
+			if test.want.deviceType != got.Type {
+				t.Fatalf("Expected %v but found %v", test.want.deviceType, got.Type)
+			}
+		})
+	}
+}
