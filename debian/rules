@@ -8,6 +8,10 @@ export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 override_dh_auto_build:
 	make ARCH=$(DEB_HOST_ARCH)
 
+override_dh_auto_install:
+	dh_auto_install
+	make install DESTDIR=$(CURDIR)/debian/hd-idle ARCH=$(DEB_HOST_ARCH)
+
 override_dh_install:
 
 override_dh_strip:
