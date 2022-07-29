@@ -45,7 +45,7 @@ install: $(TARGET)
 	install -D -g root -o root $(TARGET) $(TARGET_DIR)/sbin/$(TARGET)
 	install -D -g root -o root $(TARGET).8 $(TARGET_DIR)/share/man/man8/$(TARGET).8
 
-$(TARGET): test
+$(TARGET):
 ifeq ($(GOARCH),)
 	$(error Invalid ARCH: $(ARCH))
 endif
