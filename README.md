@@ -233,7 +233,7 @@ You can enable the log file with the flag `-l` followed by the log path. (Check 
 This is the kind of entry shown in the log file:
 
 ```
-date: 2020-07-29, time: 07:59:57, disk: sdc, running: 601, stopped: 76654
+date: 2020-07-30, time: 05:28:01, disk: sdc, running: 601, stopped: 76654
 ```
 
 Explanation:
@@ -248,11 +248,11 @@ The log file is written after a full cycle of running-stopped-wakeup.
 
 A bit more on `running` explained with the above example:
 
-|      timestamp      | disk spin | event | new disk spin |          running           |                          stopped                          |
-|:-------------------:| :----------: | :-----------: |:-------------:|:--------------------------:|:---------------------------------------------------------:|
-| 2020-07-29 07:59:57 | down | disk activity |      up       |             ?              |                             ?                             |
-| 2020-07-29 08:09:58 | up | go to sleep |     down      |             -              |                             -                             |
-| 2020-07-30 05:28:01 | down | disk activity |      up       | 08:09:58 - 07:59:57 = 601s | 2020-07-30 05:28:01 - 2020-07-29 08:09:58 = ~21h (76654s) |
+|     timestamp     |disk spin|    event    |new disk spin|         running          |                         stopped                         |
+|:-----------------:|:-------:|:-----------:|:-----------:|:------------------------:|:-------------------------------------------------------:|
+|2020-07-29 07:59:57|  down   |disk activity|     up      |            ?             |                            ?                            |
+|2020-07-29 08:09:58|   up    | go to sleep |    down     |            -             |                            -                            |
+|2020-07-30 05:28:01|  down   |disk activity|     up      |08:09:58 - 07:59:57 = 601s|2020-07-30 05:28:01 - 2020-07-29 08:09:58 = ~21h (76654s)|
 
 Explanation:
 
@@ -260,7 +260,7 @@ At 07:59:57 the disk is on standby and hd-idle detects disk activity.
 
 At 08:09:58 the disk is active and hd-idle determines inactivity of the disk and spins it down.
 
-At 05:28:01 on the next day the disk is on standby and hd-idle detects disk activity. It writes on the log file 601s of previous disk spin up and ~21h of standby.   
+At 05:28:01 on the next day the disk is on standby and hd-idle detects disk activity. It writes on the log file 601s of previous disk spin up and ~21h of standby.
 
 
 ## Warning on spinning down disks
