@@ -95,8 +95,8 @@ var deviceMapperRegex *regexp.Regexp
 type diskHolderGetterFunc func(string, string) (string, error)
 
 func init() {
-	scsiDiskRegex = regexp.MustCompile("sd[a-z]$")
-	scsiPartitionRegex = regexp.MustCompile("sd[a-z].+$")
+	scsiDiskRegex = regexp.MustCompile("sd[a-z]+$")
+	scsiPartitionRegex = regexp.MustCompile("sd[a-z]+[0-9]+$")
 	deviceMapperRegex = regexp.MustCompile("dm-.*$")
 }
 
@@ -136,14 +136,14 @@ func readSnapshot(r io.Reader, holderGetter diskHolderGetterFunc) []ReadWriteSta
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
-
 	for _, partitionStats := range partitionStatsMap {
+
 		var diskName string
 		var ok bool
 
 		switch partitionStats.Type {
 		case Partition:
-			diskName = partitionStats.Name[:3]
+			diskName = strings.TrimRight(partitionStats.Name,"0123456789")
 		case DeviceMapper:
 			if diskName, ok = deviceMapperHolderMap[partitionStats.Name]; !ok {
 				continue
@@ -200,6 +200,7 @@ func statsForDisk(rawStats string) (*ReadWriteStats, error) {
 		deviceType := Unknown
 		reads, _ := strconv.Atoi(cols[readsCol])
 		writes, _ := strconv.Atoi(cols[writesCol])
+		
 
 		if scsiDiskRegex.MatchString(name) {
 			deviceType = Disk
