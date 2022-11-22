@@ -84,8 +84,8 @@ const (
 type ReadWriteStats struct {
 	Name   string
 	Type   DeviceType
-	Reads  int
-	Writes int
+	Reads  uint64
+	Writes uint64
 }
 
 var scsiDiskRegex *regexp.Regexp
@@ -198,8 +198,8 @@ func statsForDisk(rawStats string) (*ReadWriteStats, error) {
 
 		name := cols[deviceNameCol]
 		deviceType := Unknown
-		reads, _ := strconv.Atoi(cols[readsCol])
-		writes, _ := strconv.Atoi(cols[writesCol])
+		reads, _ := strconv.ParseUint(cols[readsCol], 10, 64)
+		writes, _ := strconv.ParseUint(cols[writesCol], 10, 64)
 		
 
 		if scsiDiskRegex.MatchString(name) {

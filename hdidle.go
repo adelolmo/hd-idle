@@ -58,8 +58,8 @@ type DiskStats struct {
 	Name        string
 	IdleTime    time.Duration
 	CommandType string
-	Reads       int
-	Writes      int
+	Reads       uint64
+	Writes      uint64
 	SpinDownAt  time.Time
 	SpinUpAt    time.Time
 	LastIoAt    time.Time
