@@ -23,9 +23,8 @@ import (
 
 // https://en.wikipedia.org/wiki/SCSI_command
 const startStopUnit = 0x1b
-const standby = 0x30
 
-func StopScsiDevice(device string) error {
+func StartStopScsiDevice(device string, powerCondition uint8) error {
 	f, err := openDevice(device)
 	if err != nil {
 		return err
@@ -38,7 +37,7 @@ func StopScsiDevice(device string) error {
 		0, //Reserved (7 bit) + IMMED
 		0, //Reserved (8 bit)
 		0, //Reserved (4 bit) + POWER CONDITION MODIFER
-		standby, //POWER CONDITION + Reserved (1 bit) + NO_ FLUSH + LOEJ + LOEJ 
+		powerCondition, //POWER CONDITION + Reserved (1 bit) + NO_ FLUSH + LOEJ + LOEJ 
 		0} //CONTROL
 	ioHdr := &sgio.SgIoHdr{
 		InterfaceID:    'S',

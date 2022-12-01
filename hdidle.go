@@ -34,18 +34,20 @@ const (
 )
 
 type DefaultConf struct {
-	Idle          time.Duration
-	CommandType   string
-	Debug         bool
-	LogFile       string
-	SymlinkPolicy int
+	Idle           time.Duration
+	CommandType    string
+	PowerCondition uint8
+	Debug          bool
+	LogFile        string
+	SymlinkPolicy  int
 }
 
 type DeviceConf struct {
-	Name        string
-	GivenName   string
-	Idle        time.Duration
-	CommandType string
+	Name           string
+	GivenName      string
+	Idle           time.Duration
+	CommandType    string
+	PowerCondition uint8
 }
 
 type Config struct {
@@ -58,6 +60,7 @@ type DiskStats struct {
 	Name        string
 	IdleTime    time.Duration
 	CommandType string
+	PowerCondition uint8
 	Reads       uint64
 	Writes      uint64
 	SpinDownAt  time.Time
@@ -130,7 +133,7 @@ func updateState(tmp DiskStats, config *Config) {
 			if ds.IdleTime != 0 && idleDuration > ds.IdleTime {
 				fmt.Printf("%s spindown\n", ds.Name)
 				device := fmt.Sprintf("/dev/%s", ds.Name)
-				if err := spindownDisk(device, ds.CommandType); err != nil {
+				if err := spindownDisk(device, ds.CommandType, ds.PowerCondition); err != nil {
 					fmt.Println(err.Error())
 				}
 				previousSnapshots[dsi].SpinDownAt = now
@@ -176,21 +179,24 @@ func previousDiskStatsIndex(diskName string) int {
 func initDevice(stats DiskStats, config *Config) DiskStats {
 	idle := config.Defaults.Idle
 	command := config.Defaults.CommandType
+	powerCondition := config.Defaults.PowerCondition
 	deviceConf := deviceConfig(stats.Name, config)
 	if deviceConf != nil {
 		idle = deviceConf.Idle
 		command = deviceConf.CommandType
+		powerCondition = deviceConf.PowerCondition
 	}
 
 	return DiskStats{
-		Name:        stats.Name,
-		LastIoAt:    time.Now(),
-		SpinUpAt:    time.Now(),
-		SpunDown:    false,
-		Writes:      stats.Writes,
-		Reads:       stats.Reads,
-		IdleTime:    idle,
-		CommandType: command,
+		Name:           stats.Name,
+		LastIoAt:       time.Now(),
+		SpinUpAt:       time.Now(),
+		SpunDown:       false,
+		Writes:         stats.Writes,
+		Reads:          stats.Reads,
+		IdleTime:       idle,
+		CommandType:    command,
+		PowerCondition: powerCondition,
 	}
 }
 
@@ -207,10 +213,10 @@ func deviceConfig(diskName string, config *Config) *DeviceConf {
 	}
 }
 
-func spindownDisk(device, command string) error {
+func spindownDisk(device, command string, powerCondition uint8) error {
 	switch command {
 	case SCSI:
-		if err := sgio.StopScsiDevice(device); err != nil {
+		if err := sgio.StartStopScsiDevice(device, powerCondition); err != nil {
 			return fmt.Errorf("cannot spindown scsi disk %s:\n%s\n", device, err.Error())
 		}
 		return nil
@@ -260,11 +266,11 @@ func (c *Config) String() string {
 	for _, device := range c.Devices {
 		devices += "{" + device.String() + "}"
 	}
-	return fmt.Sprintf("symlinkPolicy=%d, defaultIdle=%v, defaultCommand=%s, debug=%t, logFile=%s, devices=%s",
-		c.Defaults.SymlinkPolicy, c.Defaults.Idle.Seconds(), c.Defaults.CommandType, c.Defaults.Debug, c.Defaults.LogFile, devices)
+	return fmt.Sprintf("symlinkPolicy=%d, defaultIdle=%v, defaultCommand=%s, defaultPowerCondition=%v, debug=%t, logFile=%s, devices=%s",
+		c.Defaults.SymlinkPolicy, c.Defaults.Idle.Seconds(), c.Defaults.CommandType, c.Defaults.PowerCondition, c.Defaults.Debug, c.Defaults.LogFile, devices)
 }
 
 func (dc *DeviceConf) String() string {
-	return fmt.Sprintf("name=%s, givenName=%s, idle=%v, commandType=%s",
-		dc.Name, dc.GivenName, dc.Idle.Seconds(), dc.CommandType)
+	return fmt.Sprintf("name=%s, givenName=%s, idle=%v, commandType=%s, powerCondition=%v",
+		dc.Name, dc.GivenName, dc.Idle.Seconds(), dc.CommandType, dc.PowerCondition)
 }
