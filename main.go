@@ -211,7 +211,7 @@ func argument(index int) (string, error) {
 
 func usage() {
 	fmt.Println("usage: hd-idle [-t <disk>] [-s <symlink_policy>] [-a <name>] [-i <idle_time>] " +
-		"[-c <command_type>] [-l <logfile>] [-d] [-h]")
+		"[-c <command_type>] [-p power_condition] [-l <logfile>] [-d] [-h]")
 }
 
 func poolInterval(deviceConfs []DeviceConf) time.Duration {
