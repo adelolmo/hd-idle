@@ -142,6 +142,12 @@ Command line options:
                         Api call to stop the device. Possible values are `scsi`
                         (default value) and `ata`.
 
++ -p *power_condition*       
+                        Power condition to send with `SCSI START STOP UNIT` command. Possible values 
+                        are `0-15` (inclusive). The default value of `0` works fine for disks accessible via the
+                        `SCSI` layer (USB, IEEE1394, ...), but it will NOT work with real `SCSI` / `SAS` disks.
+                        Commnon values for  `SAS`disks are `2` for idle and `3` for standby. 
+
 + -s *symlink_policy*   
                         Set the policy to resolve symlinks for devices. If set 
                         to `0`, symlinks are resolved only on start. If set to `1`,
