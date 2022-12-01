@@ -37,7 +37,7 @@ func StartStopScsiDevice(device string, powerCondition uint8) error {
 		0, //Reserved (7 bit) + IMMED
 		0, //Reserved (8 bit)
 		0, //Reserved (4 bit) + POWER CONDITION MODIFER
-		powerCondition, //POWER CONDITION + Reserved (1 bit) + NO_ FLUSH + LOEJ + LOEJ 
+		powerCondition << 4, //POWER CONDITION + Reserved (1 bit) + NO_ FLUSH + LOEJ + LOEJ 
 		0} //CONTROL
 	ioHdr := &sgio.SgIoHdr{
 		InterfaceID:    'S',
