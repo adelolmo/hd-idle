@@ -104,6 +104,7 @@ func main() {
 				GivenName:   name,
 				Idle:        config.Defaults.Idle,
 				CommandType: config.Defaults.CommandType,
+				PowerCondition: config.Defaults.PowerCondition,
 			}
 
 		case "-i":

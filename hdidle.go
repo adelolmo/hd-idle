@@ -209,6 +209,7 @@ func deviceConfig(diskName string, config *Config) *DeviceConf {
 	return &DeviceConf{
 		Name:        diskName,
 		CommandType: config.Defaults.CommandType,
+		PowerCondition: config.Defaults.PowerCondition,
 		Idle:        config.Defaults.Idle,
 	}
 }
