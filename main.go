@@ -203,8 +203,11 @@ func poolInterval(deviceConfs []DeviceConf) time.Duration {
 
 	interval := defaultIdleTime
 	for _, dev := range deviceConfs {
-		if dev.Idle > 0 && dev.Idle < interval {
-			interval = dev.Idle
+		if dev.Idle == 0 {
+			continue
+		}
+		if dev.Idle < interval {
+			interval = dev.Idle * time.Second
 		}
 	}
 

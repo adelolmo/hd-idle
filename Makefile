@@ -27,6 +27,10 @@ GOARCH :=
 		GOARCH = arm
 	endif
 
+ifeq ($(GOARCH),)
+  $(error Invalid ARCH: $(ARCH))
+endif
+
 ifdef DESTDIR
 # dh_auto_install (Debian) sets this variable
   TARGET_DIR = $(DESTDIR)/usr
@@ -42,13 +46,12 @@ clean:
 	rm -f $(TARGET)
 
 install: $(TARGET)
-	install -D -g root -o root $(TARGET) $(TARGET_DIR)/sbin/$(TARGET)
-	install -D -g root -o root $(TARGET).8 $(TARGET_DIR)/share/man/man8/$(TARGET).8
+	install -Dm755 $(TARGET) $(TARGET_DIR)/sbin/$(TARGET)
+
+uninstall:
+	rm -f $(TARGET_DIR)/sbin/$(TARGET)
 
 $(TARGET):
-ifeq ($(GOARCH),)
-	$(error Invalid ARCH: $(ARCH))
-endif
 	GOOS=linux GOARCH=$(GOARCH) go build
 
 test:
