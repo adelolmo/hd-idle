@@ -104,6 +104,7 @@ func main() {
 				GivenName:   name,
 				Idle:        config.Defaults.Idle,
 				CommandType: config.Defaults.CommandType,
+				PowerCondition: config.Defaults.PowerCondition,
 			}
 
 		case "-i":
@@ -141,6 +142,23 @@ func main() {
 				os.Exit(1)
 			}
 
+		case "-p":
+			s, err := argument(index)
+			if err != nil {
+				fmt.Println("Missing power condition after -p. Must be a number from 0-15.")
+				os.Exit(1)
+			}
+			powerCondition, err := strconv.ParseUint(s, 0, 4)
+			if err != nil {
+				fmt.Printf("Invalid power condition %s: %s", s, err.Error())
+				os.Exit(1)
+			}
+			if deviceConf == nil {
+					config.Defaults.PowerCondition = uint8(powerCondition)
+					break
+				}
+				deviceConf.PowerCondition = uint8(powerCondition)
+
 		case "-l":
 			logfile, err := argument(index)
 			if err != nil {
@@ -159,7 +177,7 @@ func main() {
 	}
 
 	if singleDiskMode {
-		if err := spindownDisk(disk, config.Defaults.CommandType); err != nil {
+		if err := spindownDisk(disk, config.Defaults.CommandType, config.Defaults.PowerCondition); err != nil {
 			fmt.Println(err.Error())
 			os.Exit(1)
 		}
@@ -193,7 +211,7 @@ func argument(index int) (string, error) {
 
 func usage() {
 	fmt.Println("usage: hd-idle [-t <disk>] [-s <symlink_policy>] [-a <name>] [-i <idle_time>] " +
-		"[-c <command_type>] [-l <logfile>] [-d] [-h]")
+		"[-c <command_type>] [-p power_condition] [-l <logfile>] [-d] [-h]")
 }
 
 func poolInterval(deviceConfs []DeviceConf) time.Duration {

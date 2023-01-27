@@ -142,6 +142,13 @@ Command line options:
                         Api call to stop the device. Possible values are `scsi`
                         (default value) and `ata`.
 
++ -p *power_condition*       
+                        Power condition to send with the issued SCSI START STOP UNIT command. Possible values 
+                        are `0-15` (inclusive). The default value of `0` works fine for disks accessible via the
+                        SCSI layer (USB, IEEE1394, ...), but it will *NOT* work as intended with real SCSI / SAS disks.
+                        A stopped SAS disk will not start up automatically on access, but requires a startup command for reactivation.
+                        Useful values for  SAS disks are `2` for idle and `3` for standby. 
+
 + -s *symlink_policy*   
                         Set the policy to resolve symlinks for devices. If set 
                         to `0`, symlinks are resolved only on start. If set to `1`,
@@ -271,14 +278,6 @@ to spin down after a few seconds you may damage the disk over time due to the
 stress the spin-up causes on the spindle motor and bearings. It seems that
 manufacturers recommend a minimum idle time of 3-5 minutes, the default in
 `hd-idle` is 10 minutes.
-
-One more word of caution: `hd-idle` will spin down any disk accessible via the
-`SCSI` layer (USB, IEEE1394, ...) but it will NOT work with real `SCSI` disks
-because they don't spin up automatically. Thus it's not called scsi-idle and
-I don't recommend using it on a real `SCSI` system unless you have a kernel
-patch that automatically starts the `SCSI` disks after receiving a sense buffer
-indicating the disk has been stopped. Without such a patch, real `SCSI` disks
-won't start again and you can as well pull the plug.
 
 You have been warned...
 

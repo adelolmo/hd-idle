@@ -24,14 +24,21 @@ import (
 // https://en.wikipedia.org/wiki/SCSI_command
 const startStopUnit = 0x1b
 
-func StopScsiDevice(device string) error {
+func StartStopScsiDevice(device string, powerCondition uint8) error {
 	f, err := openDevice(device)
 	if err != nil {
 		return err
 	}
 
 	senseBuf := make([]byte, sgio.SENSE_BUF_LEN)
-	inqCmdBlk := []uint8{startStopUnit, 0, 0, 0, 0, 0}
+	//See https://www.seagate.com/files/staticfiles/support/docs/manual/Interface%20manuals/100293068j.pdf - 3.49 START STOP UNIT command
+	inqCmdBlk := []uint8{
+		startStopUnit, 
+		0, //Reserved (7 bit) + IMMED
+		0, //Reserved (8 bit)
+		0, //Reserved (4 bit) + POWER CONDITION MODIFER
+		powerCondition << 4, //POWER CONDITION + Reserved (1 bit) + NO_ FLUSH + LOEJ + LOEJ 
+		0} //CONTROL
 	ioHdr := &sgio.SgIoHdr{
 		InterfaceID:    'S',
 		DxferDirection: SgDxferNone,
