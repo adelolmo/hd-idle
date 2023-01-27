@@ -40,10 +40,11 @@ func main() {
 	singleDiskMode := false
 	var disk string
 	defaultConf := DefaultConf{
-		Idle:          defaultIdleTime,
-		CommandType:   SCSI,
-		Debug:         false,
-		SymlinkPolicy: 0,
+		Idle:           defaultIdleTime,
+		CommandType:    SCSI,
+		PowerCondition: 0,
+		Debug:          false,
+		SymlinkPolicy:  0,
 	}
 	var config = &Config{
 		Devices:  []DeviceConf{},
@@ -100,10 +101,10 @@ func main() {
 				fmt.Printf("Unable to resolve symlink: %s\n", name)
 			}
 			deviceConf = &DeviceConf{
-				Name:        deviceRealPath,
-				GivenName:   name,
-				Idle:        config.Defaults.Idle,
-				CommandType: config.Defaults.CommandType,
+				Name:           deviceRealPath,
+				GivenName:      name,
+				Idle:           config.Defaults.Idle,
+				CommandType:    config.Defaults.CommandType,
 				PowerCondition: config.Defaults.PowerCondition,
 			}
 
@@ -154,10 +155,10 @@ func main() {
 				os.Exit(1)
 			}
 			if deviceConf == nil {
-					config.Defaults.PowerCondition = uint8(powerCondition)
-					break
-				}
-				deviceConf.PowerCondition = uint8(powerCondition)
+				config.Defaults.PowerCondition = uint8(powerCondition)
+				break
+			}
+			deviceConf.PowerCondition = uint8(powerCondition)
 
 		case "-l":
 			logfile, err := argument(index)
@@ -225,7 +226,7 @@ func poolInterval(deviceConfs []DeviceConf) time.Duration {
 			continue
 		}
 		if dev.Idle < interval {
-			interval = dev.Idle * time.Second
+			interval = dev.Idle
 		}
 	}
 

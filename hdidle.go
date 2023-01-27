@@ -57,16 +57,16 @@ type Config struct {
 }
 
 type DiskStats struct {
-	Name        string
-	IdleTime    time.Duration
-	CommandType string
+	Name           string
+	IdleTime       time.Duration
+	CommandType    string
 	PowerCondition uint8
-	Reads       uint64
-	Writes      uint64
-	SpinDownAt  time.Time
-	SpinUpAt    time.Time
-	LastIoAt    time.Time
-	SpunDown    bool
+	Reads          uint64
+	Writes         uint64
+	SpinDownAt     time.Time
+	SpinUpAt       time.Time
+	LastIoAt       time.Time
+	SpunDown       bool
 }
 
 var previousSnapshots []DiskStats
@@ -207,10 +207,10 @@ func deviceConfig(diskName string, config *Config) *DeviceConf {
 		}
 	}
 	return &DeviceConf{
-		Name:        diskName,
-		CommandType: config.Defaults.CommandType,
+		Name:           diskName,
+		CommandType:    config.Defaults.CommandType,
 		PowerCondition: config.Defaults.PowerCondition,
-		Idle:        config.Defaults.Idle,
+		Idle:           config.Defaults.Idle,
 	}
 }
 

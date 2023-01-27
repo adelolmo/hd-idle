@@ -18,15 +18,15 @@ func TestIntervalWithZeroSecondsIdle(t *testing.T) {
 	}
 }
 
-func TestIntervalWith600SecondsIdle(t *testing.T) {
+func TestIntervalWith300SecondsIdle(t *testing.T) {
 	confs := []DeviceConf{{
 		Name:        "test",
 		GivenName:   "test",
-		Idle:        600,
+		Idle:        300,
 		CommandType: "ata",
 	}}
 	interval := poolInterval(confs)
-	if interval != 60*time.Second {
-		t.Fatalf("interval should be the 60s. it was %v", interval)
+	if interval != 30*time.Second {
+		t.Fatalf("interval should be the 30s. it was %v", interval)
 	}
 }
