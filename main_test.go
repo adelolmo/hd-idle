@@ -22,7 +22,7 @@ func TestIntervalWith300SecondsIdle(t *testing.T) {
 	confs := []DeviceConf{{
 		Name:        "test",
 		GivenName:   "test",
-		Idle:        300,
+		Idle:        300 * time.Second,
 		CommandType: "ata",
 	}}
 	interval := poolInterval(confs)
