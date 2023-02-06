@@ -116,7 +116,8 @@ func updateState(tmp DiskStats, config *Config) {
 		return
 	}
 
-	if now.Sub(lastNow) > config.SkewTime {
+	intervalDurationInSeconds := now.Unix() - lastNow.Unix()
+	if intervalDurationInSeconds > config.SkewTime.Milliseconds()/1000 {
 		/* we slept too long, assume a suspend event and disks may be spun up */
 		/* reset spin status and timers */
 		previousSnapshots[dsi].SpinUpAt = now
