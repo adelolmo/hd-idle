@@ -1,3 +1,25 @@
+hd-idle (1.19) unstable; urgency=medium
+
+  [ Benjamin Engele ]
+  * Support more than 26 disks.
+
+  [ Paul Webster ]
+  * Use explicit uint64
+
+  [ Benjamin Engele ]
+  * Use standby instead of stop command.
+  * Support configuring power condition.
+  * Add and describe -p parameter usage.
+  * Adjusted documentation of power condition.
+
+  [ Martin Oemus ]
+  * fixed poolInterval calculation when using idle intervals of 0
+
+  [ Andoni del Olmo ]
+  * fixed Use UNIX time to calculate skew interval
+
+ -- Andoni del Olmo <andoni.delolmo@gmail.com>  Thu, 09 Feb 2023 11:55:12 +0100
+
 hd-idle (1.18) unstable; urgency=medium
 
   * fix cross platform compilation
