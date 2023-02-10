@@ -26,7 +26,7 @@ case "$1" in
 	start)
 		log_daemon_msg "Starting the hd-idle daemon" "hd-idle"
 
-		start-stop-daemon --start --quiet --oknodo --exec $DAEMON -- $HD_IDLE_OPTS
+		start-stop-daemon --start --quiet --oknodo --background --exec $DAEMON -- $HD_IDLE_OPTS
 
 		log_end_msg $?
 		;;
