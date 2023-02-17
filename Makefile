@@ -47,6 +47,7 @@ clean:
 
 install: $(TARGET)
 	install -Dm755 $(TARGET) $(TARGET_DIR)/sbin/$(TARGET)
+	install -Dm755 debian/$(TARGET).8 $(TARGET_DIR)/share/man/man8/$(TARGET).8
 
 uninstall:
 	rm -f $(TARGET_DIR)/sbin/$(TARGET)
