@@ -1,3 +1,10 @@
+hd-idle (1.20) unstable; urgency=medium
+
+  * Fix force hd-idle into background in init script
+  * Fix missing man page
+
+ -- Andoni del Olmo <andoni.delolmo@gmail.com>  Fri, 17 Feb 2023 16:54:38 +0100
+
 hd-idle (1.19) unstable; urgency=medium
 
   [ Benjamin Engele ]
