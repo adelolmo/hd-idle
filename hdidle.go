@@ -54,10 +54,12 @@ type Config struct {
 	Devices  []DeviceConf
 	Defaults DefaultConf
 	SkewTime time.Duration
+	NameMap map[string]string
 }
 
 type DiskStats struct {
 	Name           string
+	GivenName      string
 	IdleTime       time.Duration
 	CommandType    string
 	PowerCondition uint8
@@ -132,7 +134,7 @@ func updateState(tmp DiskStats, config *Config) {
 			/* no activity on this disk and still running */
 			idleDuration := now.Sub(ds.LastIoAt)
 			if ds.IdleTime != 0 && idleDuration > ds.IdleTime {
-				fmt.Printf("%s spindown\n", ds.Name)
+				fmt.Printf("%s spindown\n", config.NameMap[ds.Name])
 				device := fmt.Sprintf("/dev/%s", ds.Name)
 				if err := spindownDisk(device, ds.CommandType, ds.PowerCondition); err != nil {
 					fmt.Println(err.Error())
@@ -146,8 +148,8 @@ func updateState(tmp DiskStats, config *Config) {
 		/* disk had some activity */
 		if ds.SpunDown {
 			/* disk was spun down, thus it has just spun up */
-			fmt.Printf("%s spinup\n", ds.Name)
-			logSpinup(ds, config.Defaults.LogFile)
+			fmt.Printf("%s spinup\n", config.NameMap[ds.Name])
+			logSpinup(ds, config.Defaults.LogFile, config.NameMap[ds.Name])
 			previousSnapshots[dsi].SpinUpAt = now
 		}
 		previousSnapshots[dsi].Reads = tmp.Reads
@@ -231,10 +233,10 @@ func spindownDisk(device, command string, powerCondition uint8) error {
 	return nil
 }
 
-func logSpinup(ds DiskStats, file string) {
+func logSpinup(ds DiskStats, file string, givenName string) {
 	now := time.Now()
 	text := fmt.Sprintf("date: %s, time: %s, disk: %s, running: %d, stopped: %d",
-		now.Format("2006-01-02"), now.Format("15:04:05"), ds.Name,
+		now.Format("2006-01-02"), now.Format("15:04:05"), givenName,
 		int(ds.SpinDownAt.Sub(ds.SpinUpAt).Seconds()), int(now.Sub(ds.SpinDownAt).Seconds()))
 	logToFile(file, text)
 }
