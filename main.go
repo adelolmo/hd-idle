@@ -49,6 +49,7 @@ func main() {
 	var config = &Config{
 		Devices:  []DeviceConf{},
 		Defaults: defaultConf,
+		NameMap:  map[string]string{},
 	}
 	var deviceConf *DeviceConf
 
@@ -107,6 +108,7 @@ func main() {
 				CommandType:    config.Defaults.CommandType,
 				PowerCondition: config.Defaults.PowerCondition,
 			}
+			config.NameMap[deviceRealPath] = name
 
 		case "-i":
 			s, err := argument(index)
