@@ -141,7 +141,7 @@ func updateState(tmp DiskStats, config *Config) {
 			/* no activity on this disk and still running */
 			idleDuration := now.Sub(ds.LastIoAt)
 			if ds.IdleTime != 0 && idleDuration > ds.IdleTime {
-				fmt.Printf("%s spindown\n", config.resolveDeviceGivenName(ds.Name))
+				log.Printf("%s spindown\n", config.resolveDeviceGivenName(ds.Name))
 				device := fmt.Sprintf("/dev/%s", ds.Name)
 				if err := spindownDisk(device, ds.CommandType, ds.PowerCondition); err != nil {
 					fmt.Println(err.Error())
@@ -155,7 +155,7 @@ func updateState(tmp DiskStats, config *Config) {
 		/* disk had some activity */
 		if ds.SpunDown {
 			/* disk was spun down, thus it has just spun up */
-			fmt.Printf("%s spinup\n", config.resolveDeviceGivenName(ds.Name))
+			log.Printf("%s spinup\n", config.resolveDeviceGivenName(ds.Name))
 			logSpinup(ds, config.Defaults.LogFile, config.resolveDeviceGivenName(ds.Name))
 			previousSnapshots[dsi].SpinUpAt = now
 		}
