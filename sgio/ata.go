@@ -23,8 +23,8 @@ import (
 )
 
 const (
-	sgAta16    = 0x85 // ATA PASS-THROUGH(16)
-	sgAta16Len = 16
+	sgAta16 = 0x85 // ATA PASS-THROUGH(16)
+	sgAta12 = 0xa1 // ATA PASS-THROUGH (12)
 
 	sgAtaProtoNonData = 3 << 1
 	ataUsingLba       = 1 << 6
@@ -33,14 +33,14 @@ const (
 	ataOpStandbyNow2 = 0x94 // Retired in ATA4. Did not coexist with ATAPI.
 )
 
-func StopAtaDevice(device string) error {
+func StopAtaDevice(device string, preferAta12 bool) error {
 	f, err := openDevice(device)
 	if err != nil {
 		return err
 	}
 
-	if err = sendAtaCommand(f, ataOpStandbyNow1); err != nil {
-		if err = sendAtaCommand(f, ataOpStandbyNow2); err != nil {
+	if err = sendAtaCommand(f, ataOpStandbyNow1, preferAta12); err != nil {
+		if err = sendAtaCommand(f, ataOpStandbyNow2, preferAta12); err != nil {
 			return err
 		}
 	}
@@ -51,8 +51,16 @@ func StopAtaDevice(device string) error {
 	return nil
 }
 
-func sendAtaCommand(f *os.File, command uint8) error {
-	var cbd [sgAta16Len]uint8
+func sendAtaCommand(f *os.File, command uint8, preferAta12 bool) error {
+	if preferAta12 {
+		cbd := []uint8{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} // len 12
+		cbd[0] = sgAta12
+		cbd[1] = sgAtaProtoNonData
+		cbd[8] = ataUsingLba
+		cbd[9] = command
+		return sendSgio(f, cbd)
+	}
+	cbd := []uint8{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} // len 16
 	cbd[0] = sgAta16
 	cbd[1] = sgAtaProtoNonData
 	cbd[13] = ataUsingLba
@@ -60,16 +68,16 @@ func sendAtaCommand(f *os.File, command uint8) error {
 	return sendSgio(f, cbd)
 }
 
-func sendSgio(f *os.File, inqCmdBlk [sgAta16Len]uint8) error {
+func sendSgio(f *os.File, inqCmdBlk []uint8) error {
 	senseBuf := make([]byte, sgio.SENSE_BUF_LEN)
 	ioHdr := &sgio.SgIoHdr{
-		InterfaceID:    'S',                //  0	4
-		DxferDirection: SgDxferNone,        //  4 	4
-		CmdLen:         sgAta16Len,         //  8	1
-		MxSbLen:        sgio.SENSE_BUF_LEN, //  9	1
-		Cmdp:           &inqCmdBlk[0],      // 24	8
-		Sbp:            &senseBuf[0],       // 32	8
-		Timeout:        0,                  // 40	4
+		InterfaceID:    'S',                   //  0	4
+		DxferDirection: SgDxferNone,           //  4 	4
+		CmdLen:         uint8(len(inqCmdBlk)), //  8	1
+		MxSbLen:        sgio.SENSE_BUF_LEN,    //  9	1
+		Cmdp:           &inqCmdBlk[0],         // 24	8
+		Sbp:            &senseBuf[0],          // 32	8
+		Timeout:        0,                     // 40	4
 	}
 
 	if err := sgio.SgioSyscall(f, ioHdr); err != nil {

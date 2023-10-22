@@ -29,7 +29,8 @@ import (
 
 const (
 	SCSI       = "scsi"
-	ATA        = "ata"
+	ATA_16     = "ata"
+	ATA_12     = "ata12"
 	dateFormat = "2006-01-02T15:04:05"
 )
 
@@ -231,8 +232,13 @@ func spindownDisk(device, command string, powerCondition uint8) error {
 			return fmt.Errorf("cannot spindown scsi disk %s:\n%s\n", device, err.Error())
 		}
 		return nil
-	case ATA:
-		if err := sgio.StopAtaDevice(device); err != nil {
+	case ATA_16:
+		if err := sgio.StopAtaDevice(device, false); err != nil {
+			return fmt.Errorf("cannot spindown ata disk %s:\n%s\n", device, err.Error())
+		}
+		return nil
+	case ATA_12:
+		if err := sgio.StopAtaDevice(device, true); err != nil {
 			return fmt.Errorf("cannot spindown ata disk %s:\n%s\n", device, err.Error())
 		}
 		return nil

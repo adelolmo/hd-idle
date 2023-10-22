@@ -134,7 +134,7 @@ func main() {
 				os.Exit(1)
 			}
 			switch command {
-			case SCSI, ATA:
+			case SCSI, ATA_12, ATA_16:
 				if deviceConf == nil {
 					config.Defaults.CommandType = command
 					break
