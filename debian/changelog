@@ -1,3 +1,13 @@
+hd-idle (1.21) unstable; urgency=medium
+
+  [ Gray Xu ]
+  * Use GivenName instead of Name in the log
+
+  [ Andoni del Olmo ]
+  * Add support for ATA 12 length commands
+
+ -- Andoni del Olmo <andoni.delolmo@gmail.com>  Sun, 22 Oct 2023 09:55:29 +0200
+
 hd-idle (1.20) unstable; urgency=medium
 
   * Fix force hd-idle into background in init script
