@@ -29,6 +29,8 @@ const (
 	sgAtaProtoNonData = 3 << 1
 	ataUsingLba       = 1 << 6
 
+	ataOpDoorUnlock = 0xdf
+
 	ataOpStandbyNow1 = 0xe0 // https://wiki.osdev.org/ATA/ATAPI_Power_Management
 	ataOpStandbyNow2 = 0x94 // Retired in ATA4. Did not coexist with ATAPI.
 )
@@ -39,9 +41,16 @@ func StopAtaDevice(device string, preferAta12 bool) error {
 		return err
 	}
 
-	if err = sendAtaCommand(f, ataOpStandbyNow1, preferAta12); err != nil {
-		if err = sendAtaCommand(f, ataOpStandbyNow2, preferAta12); err != nil {
+	if preferAta12 {
+		if err = issueAta12Standby(err, f); err != nil {
 			return err
+		}
+
+	} else {
+		if err = sendAtaCommand(f, ataOpStandbyNow1); err != nil {
+			if err = sendAtaCommand(f, ataOpStandbyNow2); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -51,15 +60,40 @@ func StopAtaDevice(device string, preferAta12 bool) error {
 	return nil
 }
 
-func sendAtaCommand(f *os.File, command uint8, preferAta12 bool) error {
-	if preferAta12 {
-		cbd := []uint8{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} // len 12
-		cbd[0] = sgAta12
-		cbd[1] = sgAtaProtoNonData
-		cbd[8] = ataUsingLba
-		cbd[9] = command
-		return sendSgio(f, cbd)
+func issueAta12Standby(err error, f *os.File) error {
+	cbd := ataDoorUnlock()
+	if err = sendSgio(f, cbd); err != nil {
+		return err
 	}
+	if err = sendSgio(f, ata12Standby()); err != nil {
+		return err
+	}
+	return nil
+}
+
+func ataDoorUnlock() []uint8 {
+	cbd := []uint8{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} // len 12
+	cbd[0] = ataOpDoorUnlock
+	cbd[1] = 0x10
+	cbd[4] = 0x01
+	cbd[6] = 0x72
+	cbd[7] = 0x0f
+	cbd[11] = 0xfd
+	return cbd
+}
+
+func ata12Standby() []uint8 {
+	fmt.Println(" issuing standby command")
+	cbd := []uint8{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} // len 12
+	cbd[0] = ataOpDoorUnlock
+	cbd[1] = 0x10
+	cbd[10] = 0xa0 // device port
+	cbd[11] = ataOpStandbyNow1
+	return cbd
+}
+
+func sendAtaCommand(f *os.File, command uint8) error {
+
 	cbd := []uint8{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} // len 16
 	cbd[0] = sgAta16
 	cbd[1] = sgAtaProtoNonData
@@ -80,6 +114,8 @@ func sendSgio(f *os.File, inqCmdBlk []uint8) error {
 		Timeout:        0,                     // 40	4
 	}
 
+	dumpBytes(inqCmdBlk)
+
 	if err := sgio.SgioSyscall(f, ioHdr); err != nil {
 		return err
 	}
@@ -88,4 +124,12 @@ func sendSgio(f *os.File, inqCmdBlk []uint8) error {
 		return err
 	}
 	return nil
+}
+
+func dumpBytes(p []uint8) {
+	fmt.Print("outgoing cdb:  ")
+	for i := range p {
+		fmt.Printf("%02x ", p[i])
+	}
+	fmt.Print("\n")
 }
