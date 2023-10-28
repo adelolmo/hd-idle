@@ -29,26 +29,43 @@ const (
 	sgAtaProtoNonData = 3 << 1
 	ataUsingLba       = 1 << 6
 
-	ataOpDoorUnlock = 0xdf
-
 	ataOpStandbyNow1 = 0xe0 // https://wiki.osdev.org/ATA/ATAPI_Power_Management
 	ataOpStandbyNow2 = 0x94 // Retired in ATA4. Did not coexist with ATAPI.
 )
 
-func StopAtaDevice(device string, preferAta12 bool) error {
+type ataDevice struct {
+	device string
+	debug  bool
+}
+
+func StopAtaDevice(device string, debug bool) error {
+	ad := ataDevice{
+		device: device,
+		debug:  debug,
+	}
 	f, err := openDevice(device)
 	if err != nil {
 		return err
 	}
 
-	if preferAta12 {
-		if err = issueAta12Standby(err, f); err != nil {
+	switch ad.deviceType() {
+	case Jmicron:
+		if err = sendSgio(f, jmicronGetRegisters(), debug); err != nil {
 			return err
 		}
-
-	} else {
-		if err = sendAtaCommand(f, ataOpStandbyNow1); err != nil {
-			if err = sendAtaCommand(f, ataOpStandbyNow2); err != nil {
+		if debug {
+			fmt.Println(" issuing standby command")
+		}
+		if err = sendSgio(f, jmicronStandby(), debug); err != nil {
+			return err
+		}
+		return nil
+	default:
+		if debug {
+			fmt.Println(" issuing standby command")
+		}
+		if err = sendAtaCommand(f, ataOpStandbyNow1, debug); err != nil {
+			if err = sendAtaCommand(f, ataOpStandbyNow2, debug); err != nil {
 				return err
 			}
 		}
@@ -60,21 +77,10 @@ func StopAtaDevice(device string, preferAta12 bool) error {
 	return nil
 }
 
-func issueAta12Standby(err error, f *os.File) error {
-	cbd := ataDoorUnlock()
-	if err = sendSgio(f, cbd); err != nil {
-		return err
-	}
-	if err = sendSgio(f, ata12Standby()); err != nil {
-		return err
-	}
-	return nil
-}
-
-func ataDoorUnlock() []uint8 {
+func jmicronGetRegisters() []uint8 {
 	cbd := []uint8{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} // len 12
-	cbd[0] = ataOpDoorUnlock
-	cbd[1] = 0x10
+	cbd[0] = 0xdf
+	cbd[1] = 0x10 // read
 	cbd[4] = 0x01
 	cbd[6] = 0x72
 	cbd[7] = 0x0f
@@ -82,27 +88,25 @@ func ataDoorUnlock() []uint8 {
 	return cbd
 }
 
-func ata12Standby() []uint8 {
-	fmt.Println(" issuing standby command")
+func jmicronStandby() []uint8 {
 	cbd := []uint8{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} // len 12
-	cbd[0] = ataOpDoorUnlock
+	cbd[0] = 0xdf
 	cbd[1] = 0x10
-	cbd[10] = 0xa0 // device port
+	cbd[10] = 0xa0 // device port. either 0xa0 or 0xb0
 	cbd[11] = ataOpStandbyNow1
 	return cbd
 }
 
-func sendAtaCommand(f *os.File, command uint8) error {
-
+func sendAtaCommand(f *os.File, command uint8, debug bool) error {
 	cbd := []uint8{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} // len 16
 	cbd[0] = sgAta16
 	cbd[1] = sgAtaProtoNonData
 	cbd[13] = ataUsingLba
 	cbd[14] = command
-	return sendSgio(f, cbd)
+	return sendSgio(f, cbd, debug)
 }
 
-func sendSgio(f *os.File, inqCmdBlk []uint8) error {
+func sendSgio(f *os.File, inqCmdBlk []uint8, debug bool) error {
 	senseBuf := make([]byte, sgio.SENSE_BUF_LEN)
 	ioHdr := &sgio.SgIoHdr{
 		InterfaceID:    'S',                   //  0	4
@@ -114,7 +118,9 @@ func sendSgio(f *os.File, inqCmdBlk []uint8) error {
 		Timeout:        0,                     // 40	4
 	}
 
-	dumpBytes(inqCmdBlk)
+	if debug {
+		dumpBytes(inqCmdBlk)
+	}
 
 	if err := sgio.SgioSyscall(f, ioHdr); err != nil {
 		return err

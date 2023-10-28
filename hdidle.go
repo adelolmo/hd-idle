@@ -29,8 +29,7 @@ import (
 
 const (
 	SCSI       = "scsi"
-	ATA_16     = "ata"
-	ATA_12     = "ata12"
+	ATA        = "ata"
 	dateFormat = "2006-01-02T15:04:05"
 )
 
@@ -144,7 +143,7 @@ func updateState(tmp DiskStats, config *Config) {
 			if ds.IdleTime != 0 && idleDuration > ds.IdleTime {
 				fmt.Printf("%s spindown\n", config.resolveDeviceGivenName(ds.Name))
 				device := fmt.Sprintf("/dev/%s", ds.Name)
-				if err := spindownDisk(device, ds.CommandType, ds.PowerCondition); err != nil {
+				if err := spindownDisk(device, ds.CommandType, ds.PowerCondition, config.Defaults.Debug); err != nil {
 					fmt.Println(err.Error())
 				}
 				previousSnapshots[dsi].SpinDownAt = now
@@ -225,20 +224,15 @@ func deviceConfig(diskName string, config *Config) *DeviceConf {
 	}
 }
 
-func spindownDisk(device, command string, powerCondition uint8) error {
+func spindownDisk(device, command string, powerCondition uint8, debug bool) error {
 	switch command {
 	case SCSI:
 		if err := sgio.StartStopScsiDevice(device, powerCondition); err != nil {
 			return fmt.Errorf("cannot spindown scsi disk %s:\n%s\n", device, err.Error())
 		}
 		return nil
-	case ATA_16:
-		if err := sgio.StopAtaDevice(device, false); err != nil {
-			return fmt.Errorf("cannot spindown ata disk %s:\n%s\n", device, err.Error())
-		}
-		return nil
-	case ATA_12:
-		if err := sgio.StopAtaDevice(device, true); err != nil {
+	case ATA:
+		if err := sgio.StopAtaDevice(device, debug); err != nil {
 			return fmt.Errorf("cannot spindown ata disk %s:\n%s\n", device, err.Error())
 		}
 		return nil

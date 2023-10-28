@@ -134,7 +134,7 @@ func main() {
 				os.Exit(1)
 			}
 			switch command {
-			case SCSI, ATA_12, ATA_16:
+			case SCSI, ATA:
 				if deviceConf == nil {
 					config.Defaults.CommandType = command
 					break
@@ -180,7 +180,12 @@ func main() {
 	}
 
 	if singleDiskMode {
-		if err := spindownDisk(disk, config.Defaults.CommandType, config.Defaults.PowerCondition); err != nil {
+		if err := spindownDisk(
+			disk,
+			config.Defaults.CommandType,
+			config.Defaults.PowerCondition,
+			config.Defaults.Debug,
+		); err != nil {
 			fmt.Println(err.Error())
 			os.Exit(1)
 		}
