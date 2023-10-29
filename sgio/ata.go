@@ -33,22 +33,13 @@ const (
 	ataOpStandbyNow2 = 0x94 // Retired in ATA4. Did not coexist with ATAPI.
 )
 
-type ataDevice struct {
-	device string
-	debug  bool
-}
-
 func StopAtaDevice(device string, debug bool) error {
-	ad := ataDevice{
-		device: device,
-		debug:  debug,
-	}
 	f, err := openDevice(device)
 	if err != nil {
 		return err
 	}
 
-	switch ad.deviceType() {
+	switch NewAtaDevice(device, debug).deviceType() {
 	case Jmicron:
 		if err = sendSgio(f, jmicronGetRegisters(), debug); err != nil {
 			return err

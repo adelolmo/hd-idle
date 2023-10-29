@@ -4,7 +4,7 @@ hd-idle (1.21) unstable; urgency=medium
   * Use GivenName instead of Name in the log
 
   [ Andoni del Olmo ]
-  * Support Jmicron USB Bridge Controller
+  * Support Jmicron USB Bridge Controller for ATA command
 
  -- Andoni del Olmo <andoni.delolmo@gmail.com>  Sun, 22 Oct 2023 09:55:29 +0200
 

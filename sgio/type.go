@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 )
 
@@ -30,11 +29,25 @@ const (
 
 	sysblock = "/sys/block"
 
-	jmicron = 0x152d
+	jmicron = "152d"
 )
 
+type AtaDevice struct {
+	device string
+	debug  bool
+	fsRoot string
+}
+
+func NewAtaDevice(device string, debug bool) AtaDevice {
+	return AtaDevice{
+		device: device,
+		debug:  debug,
+		fsRoot: sysblock,
+	}
+}
+
 type apt struct {
-	idVendor, idProduct, bcdDevice int
+	idVendor, idProduct, bcdDevice string
 }
 
 func (a apt) isJmicron() bool {
@@ -42,15 +55,18 @@ func (a apt) isJmicron() bool {
 		return false
 	}
 	switch a.idProduct {
-	case 0x2329, 0x2336, 0x2338, 0x2339:
+	case "2329", "2336", "2338", "2339":
 		return true
 	}
 	return false
 }
 
-func (ad ataDevice) deviceType() int {
+func (ad AtaDevice) deviceType() int {
 	a, err := ad.identifyDevice(ad.device)
 	if err != nil {
+		if ad.debug {
+			fmt.Println("APT: Unsupported device")
+		}
 		return Unknown
 	}
 	if a.isJmicron() {
@@ -60,12 +76,15 @@ func (ad ataDevice) deviceType() int {
 		return Jmicron
 	}
 
+	if ad.debug {
+		fmt.Println("APT: Unsupported device")
+	}
 	return Unknown
 }
 
-func (ad ataDevice) identifyDevice(device string) (apt, error) {
+func (ad AtaDevice) identifyDevice(device string) (apt, error) {
 	diskname := strings.Split(device, "/")[2]
-	sysblockdisk := filepath.Join(sysblock, diskname)
+	sysblockdisk := filepath.Join(ad.fsRoot, diskname)
 	idVendor, err := findSystemFile(sysblockdisk, "idVendor")
 	if err != nil {
 		return apt{}, err
@@ -79,7 +98,7 @@ func (ad ataDevice) identifyDevice(device string) (apt, error) {
 		return apt{}, err
 	}
 	if ad.debug {
-		fmt.Printf("APT: USB ID = 0x%d:0x%d (0x%3d)\n", idVendor, idProduct, bcdDevice)
+		fmt.Printf("APT: USB ID = 0x%s:0x%s (0x%3s)\n", idVendor, idProduct, bcdDevice)
 	}
 	return apt{
 			idVendor:  idVendor,
@@ -89,7 +108,7 @@ func (ad ataDevice) identifyDevice(device string) (apt, error) {
 		nil
 }
 
-func findSystemFile(systemRoot, filename string) (int, error) {
+func findSystemFile(systemRoot, filename string) (string, error) {
 	_, err := os.ReadFile(filepath.Join(systemRoot, filename))
 	relativeDir := ""
 	var content []byte
@@ -97,16 +116,12 @@ func findSystemFile(systemRoot, filename string) (int, error) {
 	depth := 0
 	for depth < 20 {
 		if err == nil {
-			id, err := strconv.Atoi(strings.TrimSpace(string(content)))
-			if err != nil {
-				return -1, err
-			}
-			return id, nil
+			return strings.TrimSpace(string(content)), nil
 		}
 		relativeDir += "/.."
 		content, err = os.ReadFile(systemRoot + relativeDir + "/" + filename)
 		depth++
 	}
 
-	return -1, fmt.Errorf("device not found")
+	return "", fmt.Errorf("device not found")
 }
