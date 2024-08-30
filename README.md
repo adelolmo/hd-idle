@@ -6,6 +6,9 @@ Reimplementation of _Christian Mueller's_ [hd-idle](http://hd-idle.sf.net) with 
 Since most external IDE disk enclosures don't support setting the IDE idle timer, 
 a program like `hd-idle` is required to spin down idle disks automatically.
 
+_Important note_: `hd-idle` is not compatible with the usage of disk monitoring tools like
+**smartmontools**.
+
 **Index**
 * [Extra features](#extra-features)
   * [Support ATA commands](#support-ata-commands)
@@ -23,6 +26,7 @@ a program like `hd-idle` is required to spin down idle disks automatically.
   * [Log file](#log-file)
 * [Warning on spinning down disks](#warning-on-spinning-down-disks)
 * [Troubleshot](#Troubleshot)
+  * [Disks won't spin down](#disks-wont-spin-down)
   * [LUKS support](#luks-support)
   * [SCSI response not ok](#scsi-response-not-ok)
 
@@ -283,7 +287,13 @@ You have been warned...
 
 # Troubleshot
 
-This section covers some usual issues that user's face while using `hd-idle`.
+This section covers some usual issues that users face while using `hd-idle`.
+
+## Disks won't spin down
+
+Unfortunately, it's not possible to get `hd-idle` working alongside disk monitoring
+tools like _smartmontools_. You have to disable those tools in order to 
+get `hd-idle` working.
 
 ## LUKS support
 
