@@ -76,6 +76,7 @@ type DiskStats struct {
 	SpinDownAt     time.Time
 	SpinUpAt       time.Time
 	LastIoAt       time.Time
+	LastSpunDownAt time.Time
 	SpunDown       bool
 }
 
@@ -139,8 +140,11 @@ func updateState(tmp DiskStats, config *Config) {
 	ds := previousSnapshots[dsi]
 	if ds.Writes == tmp.Writes && ds.Reads == tmp.Reads {
 		if !ds.SpunDown || config.Defaults.IgnoreSpinDownDetection {
+
 			idleDuration := now.Sub(ds.LastIoAt)
-			if ds.IdleTime != 0 && idleDuration > ds.IdleTime {
+			timeSinceLastSpunDown := now.Sub(ds.LastSpunDownAt)
+
+			if ds.IdleTime != 0 && idleDuration > ds.IdleTime && timeSinceLastSpunDown > ds.IdleTime {
 				if ds.SpunDown && config.Defaults.IgnoreSpinDownDetection {
 					fmt.Printf("%s spindown (ignoring prior spin down state)\n",
 						config.resolveDeviceGivenName(ds.Name))
@@ -152,6 +156,7 @@ func updateState(tmp DiskStats, config *Config) {
 				if err := spindownDisk(device, ds.CommandType, ds.PowerCondition, config.Defaults.Debug); err != nil {
 					fmt.Println(err.Error())
 				}
+				previousSnapshots[dsi].LastSpunDownAt = now
 				previousSnapshots[dsi].SpinDownAt = now
 				previousSnapshots[dsi].SpunDown = true
 			}
@@ -176,10 +181,11 @@ func updateState(tmp DiskStats, config *Config) {
 		idleDuration := now.Sub(ds.LastIoAt)
 		fmt.Printf("disk=%s command=%s spunDown=%t "+
 			"reads=%d writes=%d idleTime=%v idleDuration=%v "+
-			"spindown=%s spinup=%s lastIO=%s\n",
+			"spindown=%s spinup=%s lastIO=%s lastSpunDown=%s \n",
 			ds.Name, ds.CommandType, ds.SpunDown,
 			ds.Reads, ds.Writes, ds.IdleTime.Seconds(), math.RoundToEven(idleDuration.Seconds()),
-			ds.SpinDownAt.Format(dateFormat), ds.SpinUpAt.Format(dateFormat), ds.LastIoAt.Format(dateFormat))
+			ds.SpinDownAt.Format(dateFormat), ds.SpinUpAt.Format(dateFormat), ds.LastIoAt.Format(dateFormat),
+			ds.LastSpunDownAt.Format(dateFormat))
 	}
 }
 
