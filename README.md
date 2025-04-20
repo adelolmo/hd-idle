@@ -170,6 +170,10 @@ Command line options:
                         On systems with more than one disk, the disk where the log
                         is written will be spun up. On raspberry based systems the 
                         log should be written to the SD card.
++ -I
+                        Ignore spin down detection. Will trigger the spin down command even if hd-idle considers
+                        the disk to be spun down already. This is useful if the drive is spinning because of
+                        undetected activities (e.g SMART calls).
 
 Miscellaneous options:
 

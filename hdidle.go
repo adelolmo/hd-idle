@@ -34,12 +34,13 @@ const (
 )
 
 type DefaultConf struct {
-	Idle           time.Duration
-	CommandType    string
-	PowerCondition uint8
-	Debug          bool
-	LogFile        string
-	SymlinkPolicy  int
+	Idle                    time.Duration
+	CommandType             string
+	PowerCondition          uint8
+	Debug                   bool
+	LogFile                 string
+	SymlinkPolicy           int
+	IgnoreSpinDownDetection bool
 }
 
 type DeviceConf struct {
@@ -137,11 +138,16 @@ func updateState(tmp DiskStats, config *Config) {
 
 	ds := previousSnapshots[dsi]
 	if ds.Writes == tmp.Writes && ds.Reads == tmp.Reads {
-		if !ds.SpunDown {
-			/* no activity on this disk and still running */
+		if !ds.SpunDown || config.Defaults.IgnoreSpinDownDetection {
 			idleDuration := now.Sub(ds.LastIoAt)
 			if ds.IdleTime != 0 && idleDuration > ds.IdleTime {
-				fmt.Printf("%s spindown\n", config.resolveDeviceGivenName(ds.Name))
+				if ds.SpunDown && config.Defaults.IgnoreSpinDownDetection {
+					fmt.Printf("%s spindown (ignoring prior spin down state)\n",
+						config.resolveDeviceGivenName(ds.Name))
+				} else {
+					fmt.Printf("%s spindown\n",
+						config.resolveDeviceGivenName(ds.Name))
+				}
 				device := fmt.Sprintf("/dev/%s", ds.Name)
 				if err := spindownDisk(device, ds.CommandType, ds.PowerCondition, config.Defaults.Debug); err != nil {
 					fmt.Println(err.Error())

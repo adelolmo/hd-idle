@@ -127,6 +127,9 @@ func main() {
 			}
 			deviceConf.Idle = time.Duration(idle) * time.Second
 
+		case "-I":
+			config.Defaults.IgnoreSpinDownDetection = true
+
 		case "-c":
 			command, err := argument(index)
 			if err != nil {
@@ -219,7 +222,7 @@ func argument(index int) (string, error) {
 
 func usage() {
 	fmt.Println("usage: hd-idle [-t <disk>] [-s <symlink_policy>] [-a <name>] [-i <idle_time>] " +
-		"[-c <command_type>] [-p power_condition] [-l <logfile>] [-d] [-h]")
+		"[-c <command_type>] [-p power_condition] [-l <logfile>] [-d] [-I] [-h]")
 }
 
 func poolInterval(deviceConfs []DeviceConf) time.Duration {
