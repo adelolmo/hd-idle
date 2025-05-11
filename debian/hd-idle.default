@@ -34,6 +34,10 @@ START_HD_IDLE=false
 #                          except for tuning purposes. On single-disk systems,
 #                          this option should not cause any additional spinups.
 #
+# -I
+#                          Ignore spin down detection. Will trigger the spin down command even if hd-idle considers
+#                          the disk to be spun down already. This is useful if the drive is spinning because of
+#                          undetected activities (e.g SMART calls).
 # Options not exactly useful here:
 #  -t <disk>               Spin-down the specified disk immediately and exit.
 #  -d                      Debug mode. It will print debugging info to

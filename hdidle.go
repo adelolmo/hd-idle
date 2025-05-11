@@ -34,12 +34,13 @@ const (
 )
 
 type DefaultConf struct {
-	Idle           time.Duration
-	CommandType    string
-	PowerCondition uint8
-	Debug          bool
-	LogFile        string
-	SymlinkPolicy  int
+	Idle                    time.Duration
+	CommandType             string
+	PowerCondition          uint8
+	Debug                   bool
+	LogFile                 string
+	SymlinkPolicy           int
+	IgnoreSpinDownDetection bool
 }
 
 type DeviceConf struct {
@@ -75,6 +76,7 @@ type DiskStats struct {
 	SpinDownAt     time.Time
 	SpinUpAt       time.Time
 	LastIoAt       time.Time
+	LastSpunDownAt time.Time
 	SpunDown       bool
 }
 
@@ -137,15 +139,24 @@ func updateState(tmp DiskStats, config *Config) {
 
 	ds := previousSnapshots[dsi]
 	if ds.Writes == tmp.Writes && ds.Reads == tmp.Reads {
-		if !ds.SpunDown {
-			/* no activity on this disk and still running */
+		if !ds.SpunDown || config.Defaults.IgnoreSpinDownDetection {
+
 			idleDuration := now.Sub(ds.LastIoAt)
-			if ds.IdleTime != 0 && idleDuration > ds.IdleTime {
-				fmt.Printf("%s spindown\n", config.resolveDeviceGivenName(ds.Name))
+			timeSinceLastSpunDown := now.Sub(ds.LastSpunDownAt)
+
+			if ds.IdleTime != 0 && idleDuration > ds.IdleTime && timeSinceLastSpunDown > ds.IdleTime {
+				if ds.SpunDown && config.Defaults.IgnoreSpinDownDetection {
+					fmt.Printf("%s spindown (ignoring prior spin down state)\n",
+						config.resolveDeviceGivenName(ds.Name))
+				} else {
+					fmt.Printf("%s spindown\n",
+						config.resolveDeviceGivenName(ds.Name))
+				}
 				device := fmt.Sprintf("/dev/%s", ds.Name)
 				if err := spindownDisk(device, ds.CommandType, ds.PowerCondition, config.Defaults.Debug); err != nil {
 					fmt.Println(err.Error())
 				}
+				previousSnapshots[dsi].LastSpunDownAt = now
 				previousSnapshots[dsi].SpinDownAt = now
 				previousSnapshots[dsi].SpunDown = true
 			}
@@ -170,10 +181,11 @@ func updateState(tmp DiskStats, config *Config) {
 		idleDuration := now.Sub(ds.LastIoAt)
 		fmt.Printf("disk=%s command=%s spunDown=%t "+
 			"reads=%d writes=%d idleTime=%v idleDuration=%v "+
-			"spindown=%s spinup=%s lastIO=%s\n",
+			"spindown=%s spinup=%s lastIO=%s lastSpunDown=%s \n",
 			ds.Name, ds.CommandType, ds.SpunDown,
 			ds.Reads, ds.Writes, ds.IdleTime.Seconds(), math.RoundToEven(idleDuration.Seconds()),
-			ds.SpinDownAt.Format(dateFormat), ds.SpinUpAt.Format(dateFormat), ds.LastIoAt.Format(dateFormat))
+			ds.SpinDownAt.Format(dateFormat), ds.SpinUpAt.Format(dateFormat), ds.LastIoAt.Format(dateFormat),
+			ds.LastSpunDownAt.Format(dateFormat))
 	}
 }
 
@@ -277,8 +289,8 @@ func (c *Config) String() string {
 	for _, device := range c.Devices {
 		devices += "{" + device.String() + "}"
 	}
-	return fmt.Sprintf("symlinkPolicy=%d, defaultIdle=%v, defaultCommand=%s, defaultPowerCondition=%v, debug=%t, logFile=%s, devices=%s",
-		c.Defaults.SymlinkPolicy, c.Defaults.Idle.Seconds(), c.Defaults.CommandType, c.Defaults.PowerCondition, c.Defaults.Debug, c.Defaults.LogFile, devices)
+	return fmt.Sprintf("symlinkPolicy=%d, defaultIdle=%v, defaultCommand=%s, defaultPowerCondition=%v, debug=%t, logFile=%s, devices=%s, ignoreSpinDownDetection=%t",
+		c.Defaults.SymlinkPolicy, c.Defaults.Idle.Seconds(), c.Defaults.CommandType, c.Defaults.PowerCondition, c.Defaults.Debug, c.Defaults.LogFile, devices, c.Defaults.IgnoreSpinDownDetection)
 }
 
 func (dc *DeviceConf) String() string {
