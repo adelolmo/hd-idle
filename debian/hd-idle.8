@@ -73,6 +73,14 @@ because another disk had some activity. This option should not be used on
 systems with more than one disk except for tuning purposes. On single-disk
 systems, this option should not cause any additional spinups.
 .TP
+.B \-spinupscript path
+Absolute path to the script to be executed after disk spinup.
+The first argument passed to the script will be the name of the disk that has spun up.
+.TP
+.B \-spindownscript path
+Absolute path to the script to be executed after disk spindown.
+The first argument passed to the script will be the name of the disk that has spun down.
+.TP
 .B \-t disk
 Spin-down the specified disk immediately and exit. It can be used in combination
 with

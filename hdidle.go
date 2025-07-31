@@ -24,6 +24,7 @@ import (
 	"log"
 	"math"
 	"os"
+	"os/exec"
 	"time"
 )
 
@@ -41,6 +42,8 @@ type DefaultConf struct {
 	LogFile                 string
 	SymlinkPolicy           int
 	IgnoreSpinDownDetection bool
+	SpinUpScriptPath        string
+	SpinDownScriptPath      string
 }
 
 type DeviceConf struct {
@@ -152,6 +155,10 @@ func updateState(tmp DiskStats, config *Config) {
 					fmt.Printf("%s spindown\n",
 						config.resolveDeviceGivenName(ds.Name))
 				}
+				if len(config.Defaults.SpinDownScriptPath) > 0 {
+					executeBashScript(config.Defaults.SpinDownScriptPath, config.resolveDeviceGivenName(ds.Name))
+				}
+
 				device := fmt.Sprintf("/dev/%s", ds.Name)
 				if err := spindownDisk(device, ds.CommandType, ds.PowerCondition, config.Defaults.Debug); err != nil {
 					fmt.Println(err.Error())
@@ -168,6 +175,9 @@ func updateState(tmp DiskStats, config *Config) {
 			/* disk was spun down, thus it has just spun up */
 			fmt.Printf("%s spinup\n", config.resolveDeviceGivenName(ds.Name))
 			logSpinup(ds, config.Defaults.LogFile, config.resolveDeviceGivenName(ds.Name))
+			if len(config.Defaults.SpinUpScriptPath) > 0 {
+				executeBashScript(config.Defaults.SpinUpScriptPath, config.resolveDeviceGivenName(ds.Name))
+			}
 			previousSnapshots[dsi].SpinUpAt = now
 		}
 		previousSnapshots[dsi].Reads = tmp.Reads
@@ -264,6 +274,17 @@ func logSpinupAfterSleep(name, file string) {
 	text := fmt.Sprintf("date: %s, time: %s, disk: %s, assuming disk spun up after long sleep",
 		now.Format("2006-01-02"), now.Format("15:04:05"), name)
 	logToFile(file, text)
+}
+
+func executeBashScript(scriptPath string, diskName string) {
+	cmd := exec.Command("/bin/bash", scriptPath, diskName)
+
+	go func() {
+		output, err := cmd.CombinedOutput()
+		if err != nil {
+			fmt.Printf("Error executing script: %s, output: %s", err, string(output))
+		}
+	}()
 }
 
 func logToFile(file, text string) {
