@@ -69,12 +69,12 @@ func TestTakeSnapshot(t *testing.T) {
 	})
 
 	expected := []ReadWriteStats{
-		{Name: "sda", Type: Partition, Reads: 37536344, Writes: 10439592},
-		{Name: "sdaa", Type: Partition, Reads: 11371536, Writes: 17004224768},
+		{Name: "sda", Type: Disk, Reads: 37537568, Writes: 10439592},
+		{Name: "sdaa", Type: Disk, Reads: 11375913, Writes: 17004224768},
 		{Name: "sdab", Type: Disk, Reads: 1223811, Writes: 3008},
-		{Name: "sdb", Type: Partition, Reads: 727475192, Writes: 404215912},
-		{Name: "sdc", Type: Partition, Reads: 6493672, Writes: 6370936},
-		{Name: "sdd", Type: Partition, Reads: 37054579, Writes: 15682641},
+		{Name: "sdb", Type: Disk, Reads: 727476416, Writes: 404215912},
+		{Name: "sdc", Type: Disk, Reads: 6494584, Writes: 6370936},
+		{Name: "sdd", Type: Disk, Reads: 37074938, Writes: 15682640},
 		{Name: "sde", Type: Disk, Reads: 57743, Writes: 982686648},
 		{Name: "sdf", Type: DeviceMapper, Reads: 206376, Writes: 10640},
 	}
