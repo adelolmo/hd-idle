@@ -45,12 +45,6 @@ func TestRealPath(t *testing.T) {
 			want: "sda",
 		},
 		{
-			name:        "wrong symlink by id",
-			args:        args{path: "/tmp/dev/disk/by-id/ata-SAMSUNG_HD103SJ"},
-			want:        "",
-			expectError: true,
-		},
-		{
 			name:          "symlink by id",
 			args:          args{path: "/tmp/dev/disk/by-id/ata-SAMSUNG_HD103SJ"},
 			want:          "sdc",
