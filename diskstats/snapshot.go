@@ -89,14 +89,15 @@ type ReadWriteStats struct {
 }
 
 var scsiDiskRegex *regexp.Regexp
-var scsiPartitionRegex *regexp.Regexp
+
+// var scsiPartitionRegex *regexp.Regexp
 var deviceMapperRegex *regexp.Regexp
 
 type diskHolderGetterFunc func(string, string) (string, error)
 
 func init() {
 	scsiDiskRegex = regexp.MustCompile("sd[a-z]+$")
-	scsiPartitionRegex = regexp.MustCompile("sd[a-z]+[0-9]+$")
+	//scsiPartitionRegex = regexp.MustCompile("sd[a-z]+[0-9]+$")
 	deviceMapperRegex = regexp.MustCompile("dm-.*$")
 }
 
@@ -143,7 +144,7 @@ func readSnapshot(r io.Reader, holderGetter diskHolderGetterFunc) []ReadWriteSta
 
 		switch partitionStats.Type {
 		case Partition:
-			diskName = strings.TrimRight(partitionStats.Name,"0123456789")
+			diskName = strings.TrimRight(partitionStats.Name, "0123456789")
 		case DeviceMapper:
 			if diskName, ok = deviceMapperHolderMap[partitionStats.Name]; !ok {
 				continue
@@ -161,11 +162,11 @@ func readSnapshot(r io.Reader, holderGetter diskHolderGetterFunc) []ReadWriteSta
 			diskStats.Type = partitionStats.Type
 			diskStats.Writes = partitionStats.Writes
 			diskStats.Reads = partitionStats.Reads
-		} else {
+		} /*else {
 			// otherwise, accumulate stats of all partitions and holder if any
 			diskStats.Writes += partitionStats.Writes
 			diskStats.Reads += partitionStats.Reads
-		}
+		}*/
 		diskStatsMap[diskName] = diskStats
 	}
 
@@ -200,12 +201,11 @@ func statsForDisk(rawStats string) (*ReadWriteStats, error) {
 		deviceType := Unknown
 		reads, _ := strconv.ParseUint(cols[readsCol], 10, 64)
 		writes, _ := strconv.ParseUint(cols[writesCol], 10, 64)
-		
 
 		if scsiDiskRegex.MatchString(name) {
 			deviceType = Disk
-		} else if scsiPartitionRegex.MatchString(name) {
-			deviceType = Partition
+			//} else if scsiPartitionRegex.MatchString(name) {
+			//	deviceType = Partition
 		} else if deviceMapperRegex.MatchString(name) {
 			deviceType = DeviceMapper
 		} else {
