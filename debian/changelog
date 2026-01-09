@@ -1,3 +1,14 @@
+hd-idle (1.22) unstable; urgency=medium
+
+  [ Andoni del Olmo ]
+  * Ignore partitions for disk activity calculation
+
+  [ Emmanuel ]
+  * Add an option to ignore spinning internal state to allow spindown even when disk is already considered as spun down
+  * Register last spun down time and avoid spinning down again if spinning down already occurred in the idle time interval
+
+ -- Andoni del Olmo <andoni.delolmo@gmail.com>  Fri, 09 Jan 2026 19:39:43 +0100
+
 hd-idle (1.21) unstable; urgency=medium
 
   [ Gray Xu ]
