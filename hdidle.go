@@ -25,6 +25,7 @@ import (
 	"math"
 	"os"
 	"os/exec"
+	"syscall"
 	"time"
 )
 
@@ -277,12 +278,38 @@ func logSpinupAfterSleep(name, file string) {
 }
 
 func executeBashScript(scriptPath string, diskName string) {
+	fi, err := os.Stat(scriptPath)
+	if err != nil {
+		fmt.Printf("Error stating script %q: %v\n", scriptPath, err)
+		return
+	}
+
+	if !fi.Mode().IsRegular() {
+		fmt.Printf("Refusing to execute non-regular file %q (mode: %v)\n", scriptPath, fi.Mode())
+		return
+	}
+
+	st, ok := fi.Sys().(*syscall.Stat_t)
+	if !ok {
+		fmt.Printf("Cannot read ownership information for %q\n", scriptPath)
+		return
+	}
+	if st.Uid != 0 {
+		fmt.Printf("Refusing to execute %q: not owned by root (uid=%d)\n", scriptPath, st.Uid)
+		return
+	}
+
+	if fi.Mode().Perm()&0100 == 0 {
+		fmt.Printf("Refusing to execute %q: not executable by root (mode: %v)\n", scriptPath, fi.Mode().Perm())
+		return
+	}
+
 	cmd := exec.Command("/bin/bash", scriptPath, diskName)
 
 	go func() {
 		output, err := cmd.CombinedOutput()
 		if err != nil {
-			fmt.Printf("Error executing script: %s, output: %s", err, string(output))
+			fmt.Printf("Error executing script %q: %v, output: %s\n", scriptPath, err, string(output))
 		}
 	}()
 }
