@@ -21,14 +21,14 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
 )
 
 func RealPath(path string) (string, error) {
 	if path[0] != '/' {
 		return path, nil
 	}
-	if !strings.Contains(path, "by-") {
+	fi, err := os.Lstat(path)
+	if err != nil || fi.Mode()&os.ModeSymlink == 0 {
 		return filepath.Base(path), nil
 	}
 	s, err := os.Readlink(path)
