@@ -33,6 +33,10 @@ START_HD_IDLE=false
 #                          not be used on systems with more than one disk
 #                          except for tuning purposes. On single-disk systems,
 #                          this option should not cause any additional spinups.
+#  -spinupscript <path>    Absolute path to the script to be executed after disk spinup.
+#                          The first argument passed to the script will be the name of the disk that has spun up.
+#  -spindownscript <path>  Absolute path to the script to be executed after disk spindown.
+#                          The first argument passed to the script will be the name of the disk that has spun down.
 #
 # -I
 #                          Ignore spin down detection. Will trigger the spin down command even if hd-idle considers

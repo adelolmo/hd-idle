@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"github.com/adelolmo/hd-idle/io"
 	"os"
+	"path"
 	"strconv"
 	"time"
 )
@@ -172,6 +173,30 @@ func main() {
 				os.Exit(1)
 			}
 			config.Defaults.LogFile = logfile
+
+		case "-spinupscript":
+			spinupScriptPath, err := argument(index)
+			if err != nil {
+				fmt.Println("Missing path after -spinupscript.")
+				os.Exit(1)
+			}
+			if !path.IsAbs(spinupScriptPath) {
+				fmt.Println("Path for spinup script must be an absolute path.")
+				os.Exit(1)
+			}
+			config.Defaults.SpinUpScriptPath = spinupScriptPath
+
+		case "-spindownscript":
+			spindownScriptPath, err := argument(index)
+			if err != nil {
+				fmt.Println("Missing path after -spindownscript.")
+				os.Exit(1)
+			}
+			if !path.IsAbs(spindownScriptPath) {
+				fmt.Println("Path for spindown script must be an absolute path.")
+				os.Exit(1)
+			}
+			config.Defaults.SpinDownScriptPath = spindownScriptPath
 
 		case "-d":
 			config.Defaults.Debug = true
