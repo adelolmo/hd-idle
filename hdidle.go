@@ -95,7 +95,7 @@ func ObserveDiskActivity(config *Config) {
 			Reads:  stats.Reads,
 			Writes: stats.Writes,
 		}
-		updateState(*d, config)
+		updateState(*d, config, spindownDisk)
 	}
 	lastNow = now
 }
@@ -120,7 +120,9 @@ func resolveSymlinks(config *Config) {
 	}
 }
 
-func updateState(tmp DiskStats, config *Config) {
+type spindownDiskFunc func(device, command string, powerCondition uint8, debug bool) error
+
+func updateState(tmp DiskStats, config *Config, spindown spindownDiskFunc) {
 	dsi := previousDiskStatsIndex(tmp.Name)
 	if dsi < 0 {
 		previousSnapshots = append(previousSnapshots, initDevice(tmp, config))
@@ -153,12 +155,18 @@ func updateState(tmp DiskStats, config *Config) {
 						config.resolveDeviceGivenName(ds.Name))
 				}
 				device := fmt.Sprintf("/dev/%s", ds.Name)
-				if err := spindownDisk(device, ds.CommandType, ds.PowerCondition, config.Defaults.Debug); err != nil {
-					fmt.Println(err.Error())
-				}
+				err := spindown(device, ds.CommandType, ds.PowerCondition, config.Defaults.Debug)
+				/* record the attempt either way: on failure this rate-limits the
+				   retry to one per idle period instead of one per poll */
 				previousSnapshots[dsi].LastSpunDownAt = now
-				previousSnapshots[dsi].SpinDownAt = now
-				previousSnapshots[dsi].SpunDown = true
+				if err != nil {
+					/* the disk is still spinning, so leave SpunDown false and let
+					   the next idle period try again */
+					fmt.Println(err.Error())
+				} else {
+					previousSnapshots[dsi].SpinDownAt = now
+					previousSnapshots[dsi].SpunDown = true
+				}
 			}
 		}
 
