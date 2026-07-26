@@ -6,8 +6,8 @@ After=suspend.target hibernate.target hybrid-sleep.target suspend-then-hibernate
 [Service]
 Type=simple
 EnvironmentFile=/etc/default/hd-idle
-ExecStart=/usr/sbin/hd-idle $HD_IDLE_OPTS
-Restart=always
+ExecStart=hd-idle $HD_IDLE_OPTS
+Restart=on-failure
 
 [Install]
 WantedBy=multi-user.target

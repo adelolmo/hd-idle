@@ -38,13 +38,17 @@ func main() {
 	}
 
 	singleDiskMode := false
+	testMode := false
 	var disk string
 	defaultConf := DefaultConf{
 		Idle:           defaultIdleTime,
 		CommandType:    SCSI,
 		PowerCondition: 0,
 		Debug:          false,
+		Verbose:        false, // Initialize new verbose flag
 		SymlinkPolicy:  0,
+		SkipIfMounted:  false,
+		DryRun:         false,
 	}
 	var config = &Config{
 		Devices:  []DeviceConf{},
@@ -68,6 +72,15 @@ func main() {
 				os.Exit(1)
 			}
 			singleDiskMode = true
+
+		case "-T":
+			var err error
+			disk, err = argument(index)
+			if err != nil {
+				fmt.Println("Missing disk argument after -T. Must be a device (e.g. -T sda).")
+				os.Exit(1)
+			}
+			testMode = true
 
 		case "-s":
 			s, err := argument(index)
@@ -109,6 +122,7 @@ func main() {
 				PowerCondition: config.Defaults.PowerCondition,
 			}
 			config.NameMap[deviceRealPath] = name
+			deviceConf.SkipIfMounted = config.Defaults.SkipIfMounted
 
 		case "-i":
 			s, err := argument(index)
@@ -176,6 +190,18 @@ func main() {
 		case "-d":
 			config.Defaults.Debug = true
 
+		case "-v":
+			config.Defaults.Verbose = true
+
+		case "-M":
+			config.Defaults.SkipIfMounted = true
+			if deviceConf != nil {
+				deviceConf.SkipIfMounted = true
+			}
+
+		case "-N":
+			config.Defaults.DryRun = true
+
 		case "-h":
 			usage()
 			os.Exit(0)
@@ -188,10 +214,25 @@ func main() {
 			config.Defaults.CommandType,
 			config.Defaults.PowerCondition,
 			config.Defaults.Debug,
+			config.Defaults.DryRun,
 		); err != nil {
 			fmt.Println(err.Error())
 			os.Exit(1)
 		}
+		os.Exit(0)
+	}
+
+	if testMode {
+		// Check if device is part of a mounted btrfs or zfs filesystem
+		if isBtrfs, btrfsInfo := CheckBtrfsDevice(disk); isBtrfs {
+			fmt.Printf("Spindown skipped: %s\n", btrfsInfo)
+			os.Exit(0)
+		}
+		if isZfs, zfsInfo := CheckZfsDevice(disk); isZfs {
+			fmt.Printf("Spindown skipped: %s\n", zfsInfo)
+			os.Exit(0)
+		}
+		fmt.Printf("%s is not part of any mounted Btrfs or ZFS filesystem.\n", disk)
 		os.Exit(0)
 	}
 
@@ -221,8 +262,24 @@ func argument(index int) (string, error) {
 }
 
 func usage() {
-	fmt.Println("usage: hd-idle [-t <disk>] [-s <symlink_policy>] [-a <name>] [-i <idle_time>] " +
-		"[-c <command_type>] [-p power_condition] [-l <logfile>] [-d] [-I] [-h]")
+	fmt.Println(`usage: hd-idle [options]
+
+Options:
+  -t <disk>             Test mode: spindown the specified disk immediately.
+  -T <disk>             Test mode: check if the specified disk is part of a mounted Btrfs or ZFS filesystem and exit.
+  -s <symlink_policy>   Symlink policy: 0 (resolve once), 1 (resolve on retry). Default is 0.
+  -a <name>             Add a device to monitor. Can be a device name (e.g., sda) or a symlink (e.g., /dev/disk/by-id/...).
+                        This option can be used multiple times for multiple devices.
+  -i <idle_time>        Idle time in seconds before spindown. Applies to the last specified device (-a) or as a default.
+  -c <command_type>     Command type for spindown: 'scsi' or 'ata'. Applies to the last specified device (-a) or as a default.
+  -p <power_condition>  Power condition for SCSI devices (0-15). Applies to the last specified device (-a) or as a default.
+  -l <logfile>          Path to a log file for recording spinup events.
+  -d                    Enable debug output (disk status).
+  -v                    Enable verbose output (filesystem checks).
+  -I                    Ignore prior spindown state (force spindown even if already spun down).
+  -M                    Skip spindown if the device is currently mounted. Applies to the last specified device (-a) or as a default.
+  -N                    Dry-run mode: simulate spindown actions without executing them.
+  -h                    Display this help message.`)
 }
 
 func poolInterval(deviceConfs []DeviceConf) time.Duration {
