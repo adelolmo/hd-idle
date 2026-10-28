@@ -56,7 +56,8 @@ This should capture suspend events as well as excessive machine load.
 
 ### Resolve symlinks in runtime
 
-`hd-idle` can resolve disk symlinks also in runtime. Disks added after application's start won't be hidden. 
+`hd-idle` can resolve disk symlinks also in runtime. Disks added after application's start won't be hidden.
+With symlink policy `1`, symlinks are re-resolved on every monitoring cycle, so that disks whose device name changed after start (e.g. after re-plugging) are picked up as well.
 
 ### Log disk spin up
 
@@ -154,12 +155,10 @@ Command line options:
                         Useful values for  SAS disks are `2` for idle and `3` for standby. 
 
 + -s *symlink_policy*   
-                        Set the policy to resolve symlinks for devices. If set 
-                        to `0`, symlinks are resolved only on start. If set to `1`,
-                        symlinks are also resolved on runtime until success.
-                        By default symlinks are only resolved on start. If the 
-                        symlink doesn't resolve to a device, the default
-                        configuration will be applied.
+                        Set the policy to resolve symlinks for devices. If set to `0` (default), symlinks are resolved
+                        only on start. If set to `1`, symlinks are also resolved on runtime and re-resolved on every
+                        cycle, so that changed symlink targets are picked up. If the symlink doesn't resolve to a
+                        device, the default configuration will be applied.
 
 + -l *logfile*            
                         Name of logfile (written only after a disk has spun

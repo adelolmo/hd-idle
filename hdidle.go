@@ -106,17 +106,21 @@ func resolveSymlinks(config *Config) {
 	}
 	for i := range config.Devices {
 		device := config.Devices[i]
-		if len(device.Name) == 0 {
-			realPath, err := io.RealPath(device.GivenName)
-			if err == nil {
-				config.Devices[i].Name = realPath
-				logToFile(config.Defaults.LogFile,
-					fmt.Sprintf("symlink %s resolved to %s", device.GivenName, realPath))
-			}
-			if err != nil && config.Defaults.Debug {
+		realPath, err := io.RealPath(device.GivenName)
+		if err != nil {
+			if config.Defaults.Debug {
 				fmt.Printf("Cannot resolve sysmlink %s\n", device.GivenName)
 			}
+			continue
 		}
+		if realPath == device.Name {
+			continue
+		}
+		config.Devices[i].Name = realPath
+		delete(config.NameMap, device.Name)
+		config.NameMap[realPath] = device.GivenName
+		logToFile(config.Defaults.LogFile,
+			fmt.Sprintf("symlink %s resolved to %s", device.GivenName, realPath))
 	}
 }
 
