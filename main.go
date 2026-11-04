@@ -37,8 +37,7 @@ func main() {
 		os.Exit(0)
 	}
 
-	singleDiskMode := false
-	var disk string
+	var disks []string
 	defaultConf := DefaultConf{
 		Idle:           defaultIdleTime,
 		CommandType:    SCSI,
@@ -61,13 +60,12 @@ func main() {
 	for index, arg := range os.Args[1:] {
 		switch arg {
 		case "-t":
-			var err error
-			disk, err = argument(index)
+			disk, err := argument(index)
 			if err != nil {
 				fmt.Println("Missing disk argument after -t. Must be a device (e.g. -t sda).")
 				os.Exit(1)
 			}
-			singleDiskMode = true
+			disks = append(disks, disk)
 
 		case "-s":
 			s, err := argument(index)
@@ -182,14 +180,20 @@ func main() {
 		}
 	}
 
-	if singleDiskMode {
-		if err := spindownDisk(
-			disk,
-			config.Defaults.CommandType,
-			config.Defaults.PowerCondition,
-			config.Defaults.Debug,
-		); err != nil {
-			fmt.Println(err.Error())
+	if len(disks) > 0 {
+		failed := false
+		for _, disk := range disks {
+			if err := spindownDisk(
+				disk,
+				config.Defaults.CommandType,
+				config.Defaults.PowerCondition,
+				config.Defaults.Debug,
+			); err != nil {
+				fmt.Println(err.Error())
+				failed = true
+			}
+		}
+		if failed {
 			os.Exit(1)
 		}
 		os.Exit(0)

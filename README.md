@@ -178,7 +178,8 @@ Command line options:
 Miscellaneous options:
 
 + -t *disk*               
-                        Spin-down the specified disk immediately and exit.
+                        Spin-down the specified disk immediately and exit. Can be given more than once
+                        (e.g. `-t sda -t sdb`); the exit code is non-zero if any disk fails to spin down.
  
 + -d                      
                         Debug mode. It will print debugging info to

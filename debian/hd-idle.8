@@ -77,7 +77,8 @@ systems, this option should not cause any additional spinups.
 Spin-down the specified disk immediately and exit. It can be used in combination
 with
 .B \-c
-to specify the command type.
+to specify the command type. It can be given more than once to spin down several
+disks; the exit code is non-zero if any of them fail.
 .TP
 .B \-d
 Debug mode. It will print debugging info to stdout/stderr (/var/log/syslog
